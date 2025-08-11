@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inbox Whisperer • Control Panel</title>
+  <!-- React + ReactDOM UMD (no Babel) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      /* Neon HUD palette */
+      --bg:#070b14; --surface:#0b1220; --surface-2:#0e1830; --surface-3:#122043;
+      --text:#eaf6ff; --muted:#9db1c9; --primary:#14e6ff; --accent:#4aa8ff; --success:#34C759;
+      --danger:#ff4d6d; --warn:#ffb020; --idle:#8ca0b8; --info:#5AC8FA; --border:#1b2a4a; --shadow:rgba(0,8,20,.35);
+      --radius:16px; --radius-sm:12px; --radius-xs:10px;
+      --glow: 0 0 0px rgba(20,230,255,.0), 0 0 18px rgba(20,230,255,.08), 0 0 36px rgba(20,230,255,.12);
+      --glow-strong: 0 0 0px rgba(20,230,255,.0), 0 0 24px rgba(20,230,255,.18), 0 0 56px rgba(20,230,255,.22);
+      /* inline SVG noise */
+      --noise: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\n  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter>\n  <rect width='100%' height='100%' filter='url(%23n)' opacity='0.11'/>\n</svg>");
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 800px at 10% -10%, #0c1a35 0%, transparent 35%),
+                     radial-gradient(900px 600px at 110% 10%, #081226 0%, transparent 40%),
+                     linear-gradient(180deg,#050a15 0%, #0a1426 100%);
+         color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;letter-spacing:.1px}
+
+    /* global futuristic overlays */
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;
+      background:
+        radial-gradient(circle at 30% 20%, #14e6ff 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 80%, #14e6ff 0 2px, transparent 3px),
+        linear-gradient(transparent 95%, rgba(20,230,255,.18) 100%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 48px);
+      background-size: 800px 800px, 1200px 1200px, 100% 4px, 48px 100%;
+      mix-blend-mode: screen; z-index:0}
+    body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.06;z-index:0;
+      background:repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px); /* scanlines */}
+
+    .app{position:relative;z-index:1;display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr;gap:0;height:100vh}
+
+    /* Sidebar */
+    .sidebar{grid-row:1/span 2;background:linear-gradient(180deg, rgba(10,25,56,.7), rgba(10,22,44,.6));
+      border-right:1px solid var(--border);display:flex;flex-direction:column;backdrop-filter: blur(6px)}
+    .brand{display:flex;align-items:center;gap:.8rem;padding:18px;border-bottom:1px solid var(--border);position:relative}
+    .brand::after{content:"ACTIVATED";position:absolute;right:12px;top:12px;color:#79e9ff;font-size:11px;letter-spacing:.18em;opacity:.7}
+    .brand .logo{width:42px;height:42px;border-radius:50%;position:relative;box-shadow:var(--glow-strong);
+      background:radial-gradient(circle at 30% 30%, #1bdfff 0 20%, #0a1630 60%);
+      overflow:hidden}
+    .brand .logo::before{content:"";position:absolute;inset:0;border-radius:50%;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 58%, rgba(20,230,255,.25) 59% 60%, transparent 61%),
+        repeating-radial-gradient(circle at 50% 50%, rgba(20,230,255,.12) 0 2px, transparent 2px 6px),
+        repeating-linear-gradient(transparent 0 8px, rgba(20,230,255,.12) 8px 9px);
+      mix-blend-mode:screen;animation:orbit 8s linear infinite}
+    .brand .logo::after{content:"";position:absolute;inset:0;border-radius:50%;
+      background:conic-gradient(from 0deg, rgba(20,230,255,.4), rgba(20,230,255,0) 35% 100%);
+      transform-origin:50% 50%;animation:spin 6s linear infinite}
+    .brand h1{font-size:15px;margin:0;font-weight:800;letter-spacing:.22em;color:#dff7ff;text-transform:uppercase}
+
+    .nav{padding:12px}
+    .nav button{width:100%;text-align:left;padding:11px 12px;border:0;background:linear-gradient(180deg, rgba(17,40,86,.45), rgba(13,28,62,.4));color:var(--text);
+      border-radius:12px;display:flex;align-items:center;gap:10px;cursor:pointer;outline:1px solid rgba(60,120,200,.18);
+      box-shadow:inset 0 0 0 1px rgba(20,230,255,.05);position:relative}
+    .nav button::before{content:"";width:6px;height:6px;border-radius:50%;background:#69e7ff;box-shadow:0 0 14px #69e7ff;opacity:.7}
+    .nav button:hover{background:linear-gradient(180deg, rgba(25,62,128,.55), rgba(16,40,92,.5));box-shadow:var(--glow)}
+    .nav button.active{background:linear-gradient(180deg, rgba(25,120,170,.45), rgba(16,60,130,.45));outline:1px solid rgba(100,200,255,.35);box-shadow:0 0 0 1px rgba(20,230,255,.2), var(--glow)}
+    .sidebar .foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;letter-spacing:.12em}
+
+    /* Topbar */
+    .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg, rgba(14,28,60,.7), rgba(10,20,44,.6));
+      border-bottom:1px solid var(--border);position:relative}
+    .toolbar::after{content:"";position:absolute;inset:-1px 0 auto 0;height:1px;background:linear-gradient(90deg, transparent, #1fdcff 20%, transparent 60%, #1fdcff 80%, transparent);opacity:.6}
+    .toolbar .spacer{flex:1}
+
+    /* Neon pills & buttons */
+    .pill{padding:6px 12px;border:1px solid rgba(100,200,255,.25);border-radius:999px;background:linear-gradient(180deg, rgba(10,30,64,.8), rgba(8,20,44,.7));font-size:12px;color:#cfefff;box-shadow:var(--glow)}
+    .btn{background:linear-gradient(180deg, rgba(10,30,64,.85), rgba(8,20,44,.75));border:1px solid rgba(100,200,255,.25);color:#dff7ff;border-radius:12px;padding:9px 14px;cursor:pointer;box-shadow:var(--glow);transition:transform .12s ease, box-shadow .12s ease}
+    .btn:hover{transform:translateY(-1px);box-shadow:var(--glow-strong)}
+    .btn.primary{background:linear-gradient(135deg, rgba(20,230,255,.2), rgba(60,130,255,.16));border-color:rgba(120,220,255,.45)}
+    .btn[disabled]{opacity:.6;cursor:not-allowed;filter:grayscale(.2)}
+
+    .main{display:block;height:100%;}
+
+    .view{display:none;height:100%;overflow:auto}
+    .view.active{display:block}
+
+    .section{padding:16px}
+    .section h2{margin:0 0 8px 0;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:#ccf6ff}
+    .sub{color:var(--muted);font-size:12px;margin-bottom:12px}
+
+    .grid{display:grid;gap:14px}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    .grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+
+    .card{position:relative;background:linear-gradient(180deg, rgba(12,26,58,.7), rgba(10,22,48,.7));border:1px solid var(--border);
+      border-radius:var(--radius);box-shadow:0 10px 24px var(--shadow), var(--glow)}
+    .card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);
+      padding:1px;background:linear-gradient(135deg, rgba(31,220,255,.4), rgba(60,130,255,.25)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;}
+    .card .hd{padding:10px 12px;border-bottom:1px solid var(--border);color:#9fd5ff;font-size:11px;text-transform:uppercase;letter-spacing:.22em}
+    .card .bd{padding:12px}
+
+    .field{display:flex;flex-direction:column;gap:6px}
+    .input, .textarea, .select{background:linear-gradient(180deg, rgba(12,28,62,.8), rgba(10,22,44,.85));border:1px solid rgba(120,170,230,.25);border-radius:12px;color:var(--text);padding:10px;outline:none;box-shadow:inset 0 0 0 1px rgba(20,230,255,.03)}
+    .input:focus, .textarea:focus, .select:focus{box-shadow:0 0 0 1px rgba(20,230,255,.35), var(--glow)}
+    .textarea{min-height:160px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+    .table th{color:#8fbfea;font-size:11px;text-transform:uppercase;letter-spacing:.22em}
+
+    .metric{font-size:28px;font-weight:800;color:#e9fbff;text-shadow:0 0 24px rgba(20,230,255,.2)}
+    .muted{color:var(--muted)}
+    .right{margin-left:auto}
+
+    /* Custom mini-widgets */
+    .hud-radar{width:86px;height:86px;border-radius:50%;position:relative;overflow:hidden;border:1px solid rgba(120,190,255,.35);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(20,230,255,.18) 0 2px, transparent 2px 100%),
+        radial-gradient(circle at 50% 50%, rgba(20,230,255,.15), transparent 65%);
+      box-shadow:var(--glow);margin-left:6px}
+    .hud-radar .ring{position:absolute;inset:10px;border-radius:50%;border:1px dashed rgba(120,200,255,.35)}
+    .hud-radar .r2{inset:22px}
+    .hud-radar .r3{inset:34px}
+    .hud-radar .sweep{position:absolute;inset:-20%;border-radius:50%;background:conic-gradient(from 0deg, rgba(20,230,255,.0) 0 86%, rgba(20,230,255,.22) 92% 100%);
+      animation:spin 3.8s linear infinite}
+    .hud-radar .dots{position:absolute;inset:0;background:radial-gradient(circle at 30% 60%, rgba(20,230,255,.8) 0 2px, transparent 3px),
+      radial-gradient(circle at 70% 28%, rgba(20,230,255,.6) 0 2px, transparent 3px),
+      radial-gradient(circle at 42% 40%, rgba(20,230,255,.55) 0 2px, transparent 3px);filter:drop-shadow(0 0 6px rgba(20,230,255,.8))}
+
+    /* GLASS MODE */
+    .glass-on .sidebar,
+    .glass-on .toolbar,
+    .glass-on .card,
+    .glass-on .pill,
+    .glass-on .btn,
+    .glass-on .input,
+    .glass-on .textarea,
+    .glass-on .select{
+      background:rgba(16,28,64,.33) !important; border-color:rgba(120,200,255,.35) !important; backdrop-filter: blur(12px) saturate(140%);
+    }
+    .glass-on .card::after,
+    .glass-on .toolbar::after,
+    .glass-on .sidebar::after{
+      content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:soft-light;opacity:.9;
+      background-image: var(--noise); background-size:200px 200px;
+    }
+    .glass-on .pill{box-shadow:0 0 0 1px rgba(120,220,255,.35), 0 0 24px rgba(20,230,255,.2)}
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:10px;height:10px}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(31,220,255,.45), rgba(80,140,255,.4));border-radius:20px}
+    ::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes orbit{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Inbox Whisperer</h1>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="foot">Interface de configuration • Outlook → backend • Auto-knowledge</div>
+    </aside>
+
+    <header class="toolbar">
+      <div class="pill">LLM local</div>
+      <div class="pill" id="modelPill">Modèle: —</div>
+      <div class="pill" id="outlookPill">Outlook: —</div>
+      <div class="pill" id="graphPill">Graph: —</div>
+      <div class="pill" id="statusPill">Statut: hors ligne</div>
+      <div class="spacer"></div>
+      <div class="hud-radar" aria-hidden="true">
+        <div class="sweep"></div>
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="dots"></div>
+      </div>
+      <button class="btn" id="btnToggleOutlook" title="Activer/Désactiver l'ingestion Outlook">Basculer Outlook</button>
+      <button class="btn" id="btnOutlookSync" title="Forcer une synchronisation Outlook">Sync Outlook</button>
+      <button class="btn" id="btnGraph">Connecter Graph</button>
+      <button class="btn" id="btnGlass">Glass: off</button>
+      <button class="btn" id="btnSync">Rafraîchir</button>
+      <button class="btn primary" id="btnSaveAll">Enregistrer tout</button>
+    </header>
+
+    <main class="main">
+      <div id="root"></div>
+    </main>
+  </div>
+
+  <!-- Global error catcher to surface details -->
+  <script>
+    (function(){
+      function setStatus(msg){ var p=document.getElementById('statusPill'); if(p){ p.textContent='Statut: '+msg; } }
+      window.addEventListener('error', function(e){ console.error('Global error:', e.message, e.filename, e.lineno, e.colno, e.error); setStatus('erreur ('+(e.message||'')+')'); });
+      window.addEventListener('unhandledrejection', function(e){ console.error('Unhandled promise rejection:', e.reason); setStatus('erreur (promise rejetée)'); });
+    })();
+  </script>
+
+  <!-- App script (no JSX, no Babel) -->
+  <script>
+    (function(){
+      const e = React.createElement;
+      const Fragment = React.Fragment;
+      const { useState, useEffect, useRef } = React;
+
+      function mergeProps(base, extra){
+        const out = Object.assign({}, base||{});
+        if(extra){
+          for(const k in extra){
+            if(k === 'className' && out.className){ out.className += ' ' + extra.className; }
+            else { out[k] = extra[k]; }
+          }
+        }
+        return out;
+      }
+
+      // IPC wrapper (Electron preload exposes window.api.invoke)
+      async function ipcInvoke(channel, payload){
+        try{ if(window.api && typeof window.api.invoke==='function'){ return await window.api.invoke(channel, payload); } }
+        catch(err){ console.warn('IPC error', err); }
+        return null; // fallback to mocks
+      }
+
+      // Shared UI primitives
+      function Nav(props){
+        const items = props.items || [];
+        const current = props.current;
+        const onSelect = props.onSelect || function(){};
+        return e(Fragment, null, items.map(function(it){
+          return e('button', { key: it.id, className: current===it.id?'active':'', onClick: function(){ onSelect(it.id); } },
+            it.icon || '•', ' ', e('span', null, it.label)
+          );
+        }));
+      }
+
+      function Section(props){
+        return e('section', { className:'section' },
+          e('h2', null, props.title),
+          props.subtitle ? e('div', { className:'sub' }, props.subtitle) : null,
+          props.children
+        );
+      }
+
+      function Card(props){
+        return e('div', { className:'card' },
+          e('div', { className:'hd row' },
+            e('div', null, props.title),
+            props.right ? e('div', { className:'right' }, props.right) : null
+          ),
+          e('div', { className:'bd' }, props.children)
+        );
+      }
+
+      function Input(props){
+        const label = props.label; const rest = Object.assign({}, props); delete rest.label;
+        return e('div', { className:'field' },
+          label ? e('label', null, label) : null,
+          e('input', mergeProps({ className:'input' }, rest))
+        );
+      }
+
+      function TextArea(props){
+        const label = props.label; const rows = props.rows || 8; const rest = Object.assign({}, props); delete rest.label; delete rest.rows;
+        return e('div', { className:'field' },
+          label ? e('label', null, label) : null,
+          e('textarea', mergeProps({ className:'textarea', rows:rows }, rest))
+        );
+      }
+
+      function Select(props){
+        const label = props.label; const options = props.options || []; const rest = Object.assign({}, props); delete rest.label; delete rest.options;
+        return e('div', { className:'field' },
+          label ? e('label', null, label) : null,
+          e('select', mergeProps({ className:'select' }, rest), options.map(function(o){ return e('option', { key:String(o.value), value:o.value }, o.label); }))
+        );
+      }
+
+      // Knowledge
+      function Knowledge(props){
+        const knowledge = props.knowledge || [];
+        const onAddNote = props.onAddNote || function(){};
+        const onAddFile = props.onAddFile || function(){};
+        const onRemove = props.onRemove || function(){};
+        const onReindex = props.onReindex || function(){};
+        const _React = React; // avoid shadowing
+        const _useState = _React.useState;
+        const _tmp = _useState('');
+        const noteText = _tmp[0];
+        const setNoteText = _tmp[1];
+        return e(Section, { title:'Knowledge', subtitle:'La base se peuple automatiquement depuis Outlook (corps + pièces jointes). Vous pouvez aussi ajouter manuellement.' },
+          e('div', { className:'grid cols-2' },
+            e(Card, { title:'Ajouter' },
+              e('div', { className:'row', style:{ gap:12 } },
+                e('button', { className:'btn', onClick:function(){ if((noteText||'').trim()){ onAddNote((noteText||'').trim()); setNoteText(''); } } }, 'Ajouter une note'),
+                e('button', { className:'btn', onClick:onAddFile }, 'Ajouter un fichier…'),
+                e('button', { className:'btn', onClick:onReindex }, 'Réindexer')
+              ),
+              e(TextArea, { label:'Note', placeholder:'Procédures, templates, FAQ…', value:noteText, onChange:function(ev){ setNoteText(ev.target.value); } }),
+              e('div', { className:'muted' }, 'Formats recommandés : .txt, .md, .pdf, .docx')
+            ),
+            e(Card, { title:'Éléments', right: e('span', { className:'muted' }, String(knowledge.length)+' items') },
+              e('table', { className:'table', 'aria-label':'Liste knowledge' },
+                e('thead', null, e('tr', null, e('th', null, 'Type'), e('th', null, 'Nom'), e('th', null, 'État'), e('th', null, 'Actions'))),
+                e('tbody', null, knowledge.map(function(k){
+                  return e('tr', { key:k.id },
+                    e('td', null, k.type),
+                    e('td', null, k.name),
+                    e('td', { className:'muted' }, k.status || 'indexé'),
+                    e('td', null, e('button', { className:'btn', onClick:function(){ onRemove(k.id); } }, 'Supprimer'))
+                  );
+                }))
+              )
+            )
+          )
+        );
+      }
+
+      // Master Prompt + LLM config
+      function MasterPrompt(props){
+        const masterPrompt = props.masterPrompt; const setMasterPrompt = props.setMasterPrompt || function(){};
+        const onTestPrompt = props.onTestPrompt || function(){};
+        const llm = props.llm || { baseUrl:'', model:''};
+        const setLlm = props.setLlm || function(){};
+        const _tmp = useState('Bonjour, pouvez-vous m\'envoyer le compte rendu de la réunion ?');
+        const sample = _tmp[0]; const setSample = _tmp[1];
+        const _tmp2 = useState(false); const testing = _tmp2[0]; const setTesting = _tmp2[1];
+        const _tmp3 = useState(null); const result = _tmp3[0]; const setResult = _tmp3[1];
+
+        async function test(){
+          setTesting(true);
+          try{ const r = await onTestPrompt(sample, masterPrompt, llm); setResult(r || { subject_suggestion:'Re: Réunion', body:'(mock) Exemple de réponse…' }); }
+          finally{ setTesting(false); }
+        }
+
+        return e(Section, { title:'Master prompt', subtitle:'Rôle système injecté à chaque génération de brouillon.' },
+          e('div', { className:'grid cols-2' },
+            e(Card, { title:'LLM local' },
+              e('div', { className:'row' },
+                e(Input, { label:'Base URL', placeholder:'http://192.168.78.56:1234/v1', value: llm.baseUrl||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { baseUrl: ev.target.value })); } }),
+                e(Input, { label:'Modèle', placeholder:'gpt-oss', value: llm.model||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { model: ev.target.value })); } })
+              ),
+              e(TextArea, { rows:14, value:masterPrompt, onChange:function(evv){ setMasterPrompt(evv.target.value); }, placeholder:"Ex: Tu es un assistant email pour un professionnel. Règles: concision, clarté, pas d\'excuses inutiles, pas d\'hallucinations…" })
+            ),
+            e(Card, { title:'Tester', right: e('button', { className:'btn', onClick:test }, testing ? 'Génération…' : 'Générer un brouillon') },
+              e(TextArea, { label:"Email d'exemple", rows:8, value:sample, onChange:function(evv){ setSample(evv.target.value); } }),
+              e('div', { className:'field' },
+                e('label', null, 'Résultat'),
+                e('div', { className:'card', style:{ background:'var(--surface-3)' } },
+                  e('div', { className:'bd' },
+                    e('div', { className:'muted' }, 'Sujet'),
+                    e('div', { style:{ marginBottom:8 } }, result && result.subject_suggestion ? result.subject_suggestion : '—'),
+                    e('div', { className:'muted' }, 'Corps'),
+                    e('div', { style:{ whiteSpace:'pre-wrap' } }, result && result.body ? result.body : '—')
+                  )
+                )
+              )
+            )
+          )
+        );
+      }
+
+      // Tag rules
+      function TagRules(props){
+        const tags = props.tags || []; const setTags = props.setTags || function(){};
+        const rules = props.rules || []; const setRules = props.setRules || function(){};
+        const _tmp = useState({ id:'', label:'', color:'#6b7280' });
+        const newTag = _tmp[0]; const setNewTag = _tmp[1];
+
+        function addTag(){ if(!newTag.id || !newTag.label) return; if(tags.some(function(t){ return t.id===newTag.id; })) { alert('Tag déjà existant'); return; } setTags(tags.concat([ Object.assign({}, newTag) ])); setNewTag({ id:'', label:'', color:'#6b7280' }); }
+        function addRule(){ setRules(rules.concat([{ id:'r_'+Date.now(), when:{ field:'subject', op:'contains', value:'' }, then:{ add_tags:[], set_urgency:'' } }])); }
+        function updateRule(id, path, value){ setRules(rules.map(function(r){ if(r.id!==id) return r; var copy=JSON.parse(JSON.stringify(r)); var segs=path.split('.'); var ref=copy; for(var i=0;i<segs.length;i++){ var s=segs[i]; if(i===segs.length-1){ ref[s]=value; } else { ref=ref[s]; } } return copy; })); }
+        function removeRule(id){ setRules(rules.filter(function(r){ return r.id!==id; })); }
+
+        return e(Section, { title:'Attribution de tags', subtitle:'Tags et règles appliqués aux mails Outlook.' },
+          e('div', { className:'grid cols-2' },
+            e(Card, { title:'Tags' },
+              e('div', { className:'row', style:{ gap:8, marginBottom:8 } },
+                e('input', { className:'input', style:{ width:120 }, placeholder:'id', value:newTag.id, onChange:function(ev){ setNewTag(Object.assign({}, newTag, { id:(ev.target.value||'').trim() })); } }),
+                e('input', { className:'input', style:{ width:180 }, placeholder:'Label', value:newTag.label, onChange:function(ev){ setNewTag(Object.assign({}, newTag, { label:ev.target.value })); } }),
+                e('input', { className:'input', type:'color', style:{ width:60, padding:4 }, value:newTag.color, onChange:function(ev){ setNewTag(Object.assign({}, newTag, { color:ev.target.value })); } }),
+                e('button', { className:'btn', onClick:addTag }, 'Ajouter')
+              ),
+              e('table', { className:'table' },
+                e('thead', null, e('tr', null, e('th', null, 'ID'), e('th', null, 'Label'), e('th', null, 'Couleur'), e('th', null, ''))),
+                e('tbody', null, tags.map(function(t, i){
+                  return e('tr', { key:t.id },
+                    e('td', null, t.id),
+                    e('td', null, e('input', { className:'input', value:t.label, onChange:function(ev){ var next=tags.slice(); next[i]=Object.assign({}, t, { label:ev.target.value }); setTags(next); } })),
+                    e('td', null, e('input', { className:'input', type:'color', value:t.color, onChange:function(ev){ var next=tags.slice(); next[i]=Object.assign({}, t, { color:ev.target.value }); setTags(next); } })),
+                    e('td', null, e('button', { className:'btn', onClick:function(){ setTags(tags.filter(function(x){ return x.id!==t.id; })); } }, 'Supprimer'))
+                  );
+                }))
+              )
+            ),
+            e(Card, { title:'Règles (IF/THEN)', right: e('button', { className:'btn', onClick:addRule }, '+ Règle') },
+              e('table', { className:'table' },
+                e('thead', null, e('tr', null, e('th', null, 'SI (champ)'), e('th', null, 'OP'), e('th', null, 'Valeur'), e('th', null, 'ALORS'), e('th', null, ''))),
+                e('tbody', null, rules.map(function(r){
+                  return e('tr', { key:r.id },
+                    e('td', null, e('select', { className:'select', value:r.when.field, onChange:function(ev){ updateRule(r.id, 'when.field', ev.target.value); } },
+                      e('option', { value:'subject' }, 'subject'),
+                      e('option', { value:'body' }, 'body'),
+                      e('option', { value:'from.email' }, 'from.email'),
+                      e('option', { value:'from.domain' }, 'from.domain'),
+                      e('option', { value:'has_attachments' }, 'has_attachments'),
+                      e('option', { value:'language' }, 'language'),
+                      e('option', { value:'urgency.score' }, 'urgency.score')
+                    )),
+                    e('td', null, e('select', { className:'select', value:r.when.op, onChange:function(ev){ updateRule(r.id, 'when.op', ev.target.value); } },
+                      e('option', { value:'contains' }, 'contains'),
+                      e('option', { value:'equals' }, 'equals'),
+                      e('option', { value:'startsWith' }, 'startsWith'),
+                      e('option', { value:'regex' }, 'regex'),
+                      e('option', { value:'in' }, 'in'),
+                      e('option', { value:'gte' }, 'gte'),
+                      e('option', { value:'lte' }, 'lte')
+                    )),
+                    e('td', null, e('input', { className:'input', placeholder:'valeur', value:r.when.value, onChange:function(ev){ updateRule(r.id, 'when.value', ev.target.value); } })),
+                    e('td', null, e('div', { className:'row', style:{ gap:8 } },
+                      e('select', { className:'select', value:r.then.set_urgency || '', onChange:function(ev){ updateRule(r.id, 'then.set_urgency', ev.target.value); } },
+                        e('option', { value:'' }, '(sans)'),
+                        e('option', { value:'urgent' }, 'urgent'),
+                        e('option', { value:'moyennement_urgent' }, 'moyennement_urgent'),
+                        e('option', { value:'pas_urgent' }, 'pas_urgent')
+                      ),
+                      e('input', { className:'input', placeholder:'tags (séparés par ,)', value:(r.then.add_tags||[]).join(','), onChange:function(ev){ var arr=(ev.target.value||'').split(',').map(function(s){ return s.trim(); }).filter(function(Boolean){ return Boolean; }); updateRule(r.id, 'then.add_tags', arr); } })
+                    )),
+                    e('td', null, e('button', { className:'btn', onClick:function(){ removeRule(r.id); } }, 'Supprimer'))
+                  );
+                }))
+              ),
+              e('div', { className:'muted', style:{ marginTop:8 } }, 'Les règles sont appliquées côté backend.')
+            )
+          )
+        );
+      }
+
+      // Conduct
+      function Conduct(props){
+        const conduct = props.conduct || {}; const setConduct = props.setConduct || function(){};
+        function up(field, value){ var next = Object.assign({}, conduct); next[field] = value; setConduct(next); }
+        return e(Section, { title:"Ligne de conduite de l'assistant", subtitle:'Contraintes stylistiques et comportementales.' },
+          e('div', { className:'grid cols-2' },
+            e(Card, { title:'Ton & style' },
+              e(Input, { label:'Ton', placeholder:'ex: professionnel mais chaleureux', value:conduct.tone || '', onChange:function(ev){ up('tone', ev.target.value); } }),
+              e(Input, { label:'Niveau de formalité', placeholder:'ex: moyen', value:conduct.formality || '', onChange:function(ev){ up('formality', ev.target.value); } }),
+              e('div', { className:'row' },
+                e('label', null, e('input', { type:'checkbox', checked:!!conduct.useBullets, onChange:function(ev){ up('useBullets', ev.target.checked); } }), ' Listes à puces autorisées'),
+                e('label', null, e('input', { type:'checkbox', checked:!!conduct.noEmojis, onChange:function(ev){ up('noEmojis', ev.target.checked); } }), " Pas d'emojis"),
+                e('label', null, e('input', { type:'checkbox', checked:!!conduct.brief, onChange:function(ev){ up('brief', ev.target.checked); } }), ' Réponses concises')
+              )
+            ),
+            e(Card, { title:'Signature & interdits' },
+              e(Input, { label:'Signature', placeholder:'Bien à vous, …', value:conduct.signature || '', onChange:function(ev){ up('signature', ev.target.value); } }),
+              e(TextArea, { label:'À faire (Do)', rows:6, value:conduct.do || '', onChange:function(ev){ up('do', ev.target.value); } }),
+              e(TextArea, { label:"À éviter (Don't)", rows:6, value:conduct.dont || '', onChange:function(ev){ up('dont', ev.target.value); } })
+            )
+          )
+        );
+      }
+
+      // Analytics
+      function AnalyticsView(props){
+        const analytics = props.analytics || {};
+        const tagCanvasRef = useRef(null);
+        const urgCanvasRef = useRef(null);
+        const _tmp = useState({ tag:null, urg:null });
+        const charts = _tmp[0]; const setCharts = _tmp[1];
+
+        useEffect(function(){
+          if(!window.Chart) return;
+          if(tagCanvasRef.current){ if(charts.tag){ charts.tag.destroy(); }
+            const labels = Object.keys(analytics.perTag || {});
+            const data = labels.map(function(k){ return analytics.perTag[k]; });
+            charts.tag = new Chart(tagCanvasRef.current, { type:'bar', data:{ labels:labels, datasets:[{ label:'Emails', data:data }] }, options:{ responsive:true, maintainAspectRatio:false }});
+          }
+          if(urgCanvasRef.current){ if(charts.urg){ charts.urg.destroy(); }
+            const labels2 = Object.keys(analytics.perUrgency || {});
+            const data2 = labels2.map(function(k){ return analytics.perUrgency[k]; });
+            charts.urg = new Chart(urgCanvasRef.current, { type:'doughnut', data:{ labels:labels2, datasets:[{ data:data2 }] }, options:{ responsive:true, maintainAspectRatio:false }});
+          }
+          setCharts(Object.assign({}, charts));
+        }, [analytics]);
+
+        return e(Section, { title:'Données analytiques', subtitle:'KPIs du pipeline Outlook → LLM' },
+          e('div', { className:'grid cols-3' },
+            e(Card, { title:'Mails traités' }, e('div', { className:'metric' }, analytics.processed || 0), e('div', { className:'muted' }, 'depuis minuit')),
+            e(Card, { title:'En attente' }, e('div', { className:'metric' }, analytics.pending || 0), e('div', { className:'muted' }, 'dans la file')),
+            e(Card, { title:'Brouillons générés' }, e('div', { className:'metric' }, analytics.drafts || 0), e('div', { className:'muted' }, "aujourd'hui"))
+          ),
+          e('div', { className:'grid cols-2', style:{ marginTop:12 } },
+            e(Card, { title:'Par tags' }, e('div', { style:{ height:260 } }, e('canvas', { ref:tagCanvasRef, height:'240' })) ),
+            e(Card, { title:"Par niveau d'urgence" }, e('div', { style:{ height:260 } }, e('canvas', { ref:urgCanvasRef, height:'240' })) )
+          ),
+          e('div', { className:'grid cols-2', style:{ marginTop:12 } },
+            e(Card, { title:'Diagnostics (smoke tests)' }, e('ul', { id:'diagList', className:'muted', style:{ margin:0, paddingLeft:18 } }) )
+          )
+        );
+      }
+
+      // Smoke tests
+      function runSmokeTests(){
+        var results = [];
+        function pass(name, detail){ results.push({ok:true,name:name,detail:detail}); }
+        function fail(name, detail){ results.push({ok:false,name:name,detail:detail}); }
+        try{ React && React.createElement; pass('React UMD chargé'); }catch(e){ fail('React non chargé', String(e)); }
+        try{ ReactDOM && ReactDOM.createRoot; pass('ReactDOM UMD chargé'); }catch(e){ fail('ReactDOM non chargé', String(e)); }
+        try{ var el = document.getElementById('root'); if(el) pass('#root présent'); else fail('#root absent'); }catch(e){ fail('#root absent', String(e)); }
+        try{ if(window.Chart){ var canvas=document.createElement('canvas'); var ctx=canvas.getContext('2d'); var c=new Chart(ctx,{ type:'bar', data:{ labels:['A'], datasets:[{ data:[1] }] } }); c.destroy(); pass('Chart.js opérationnel'); } else { fail('Chart.js non chargé'); } }catch(e){ fail("Chart.js échec d'init", String(e)); }
+        try{ var n=document.createElement('div'); ReactDOM.createRoot(n).render(React.createElement('div', null, 'test')); pass('Rendu React de base'); }catch(e){ fail('Rendu React', String(e)); }
+        try{ if(window.api && typeof window.api.invoke==='function'){ pass('IPC disponible'); } else { pass('IPC non détecté (mode démo)'); } }catch(e){ fail('IPC check', String(e)); }
+        var ul=document.getElementById('diagList'); if(ul){ ul.innerHTML = results.map(function(r){ return '<li>'+(r.ok?'✅':'❌')+' '+r.name+(r.detail? ' – '+r.detail:'')+'</li>'; }).join(''); }
+        var ok = results.every(function(r){ return r.ok; }); var p=document.getElementById('statusPill'); if(p){ p.textContent = (p.textContent || 'Statut: —') + (ok? ' • tests OK':' • tests en échec'); }
+        console.table(results); return results;
+      }
+
+      // App
+      function App(){
+        const tabs = [
+          { id:'knowledge', label:'Knowledge', icon:'📚' },
+          { id:'master', label:'Master prompt', icon:'🧠' },
+          { id:'tags', label:'Attribution de tags', icon:'🏷️' },
+          { id:'conduct', label:'Ligne de conduite', icon:'🧭' },
+          { id:'analytics', label:'Analytics', icon:'📊' },
+        ];
+
+        const _t = useState('knowledge'); const tab = _t[0]; const setTab = _t[1];
+        const _m = useState('—'); const model = _m[0]; const setModel = _m[1];
+        const _s = useState('hors ligne'); const status = _s[0]; const setStatus = _s[1];
+        const _o = useState(false); const outlookEnabled = _o[0]; const setOutlookEnabled = _o[1];
+        const _g = useState({ connected:false, account:null }); const graph = _g[0]; const setGraph = _g[1];
+        const _glass = useState(false); const glass = _glass[0]; const setGlass = _glass[1];
+
+        const _llm = useState({ baseUrl:'http://192.168.78.56:1234/v1', model:'gpt-oss' }); const llm = _llm[0]; const setLlm = _llm[1];
+
+        const _k = useState([]); const knowledge = _k[0]; const setKnowledge = _k[1];
+        const _mp = useState("Tu es un assistant email professionnel. Sois clair, concis, utile. Pas d'hallucinations."); const masterPrompt = _mp[0]; const setMasterPrompt = _mp[1];
+        const _tg = useState([
+          { id:'urgent', label:'Urgent', color:'#FF3B30' },
+          { id:'moyennement_urgent', label:'Moyennement urgent', color:'#FF9500' },
+          { id:'pas_urgent', label:'Pas urgent', color:'#8E8E93' },
+          { id:'reply', label:'À répondre', color:'#007AFF' },
+        ]); const tags = _tg[0]; const setTags = _tg[1];
+        const _r = useState([]); const rules = _r[0]; const setRules = _r[1];
+        const _c = useState({ tone:'professionnel mais chaleureux', formality:'moyen', useBullets:true, noEmojis:true, brief:true, signature:'Bien à vous,\nNom', do:'Structurer par paragraphes courts.', dont:'Ne pas inventer de faits.' }); const conduct = _c[0]; const setConduct = _c[1];
+        const _a = useState({ processed:0, pending:0, drafts:0, perTag:{}, perUrgency:{} }); const analytics = _a[0]; const setAnalytics = _a[1];
+
+        // Load settings from backend
+        useEffect(function(){ (async function(){
+          const s = await ipcInvoke('settings:get');
+          if(s){
+            setModel((s.llm && (s.llm.model_alias || s.llm.model)) ? (s.llm.model_alias || s.llm.model) : '—');
+            setStatus(s.status && s.status.online ? 'en ligne' : 'hors ligne');
+            setOutlookEnabled(!!(s.outlook && s.outlook.enabled));
+            if(s.masterPrompt) setMasterPrompt(s.masterPrompt);
+            if(Array.isArray(s.tags)) setTags(s.tags);
+            if(Array.isArray(s.rules)) setRules(s.rules);
+            if(s.conduct) setConduct(s.conduct);
+            if(s.ui && typeof s.ui.glass==='boolean'){ setGlass(s.ui.glass); try{ document.body.classList.toggle('glass-on', !!s.ui.glass); }catch(_){} }
+            if(s.graph){ setGraph({ connected: !!s.graph.connected, account: s.graph.account || null }); }
+            if(s.llm){ setLlm({ baseUrl: s.llm.base_url || s.llm.baseUrl || 'http://192.168.78.56:1234/v1', model: s.llm.model_alias || s.llm.model || 'gpt-oss' }); }
+          }
+          const k = await ipcInvoke('knowledge:list'); if(Array.isArray(k)) setKnowledge(k);
+          const a = await ipcInvoke('analytics:get'); if(a) setAnalytics(a);
+          const gs = await ipcInvoke('graph:status'); if(gs){ setGraph({ connected: !!gs.connected, account: gs.account || null }); }
+        })(); }, []);
+
+        // Header pills + buttons
+        useEffect(function(){
+          var mp = document.getElementById('modelPill'); if(mp) mp.textContent = 'Modèle: '+model;
+          var sp = document.getElementById('statusPill'); if(sp) sp.textContent = 'Statut: '+status;
+          var op = document.getElementById('outlookPill'); if(op) op.textContent = 'Outlook: '+(outlookEnabled? 'activé':'désactivé');
+          var gp = document.getElementById('graphPill'); if(gp) gp.textContent = 'Graph: '+(graph.connected? 'connecté':'déconnecté');
+          var glassBtn = document.getElementById('btnGlass'); if(glassBtn) glassBtn.textContent = 'Glass: '+(glass? 'on':'off');
+
+          var syncBtn = document.getElementById('btnSync');
+          if(syncBtn){ syncBtn.onclick = async function(){
+            const a = await ipcInvoke('analytics:get'); setAnalytics(a || analytics);
+            const k = await ipcInvoke('knowledge:list'); if(Array.isArray(k)) setKnowledge(k);
+            const gs = await ipcInvoke('graph:status'); if(gs){ setGraph({ connected: !!gs.connected, account: gs.account || null }); }
+          }; }
+          var saveBtn = document.getElementById('btnSaveAll'); if(saveBtn){ saveBtn.onclick = saveAll; }
+          var toggleBtn = document.getElementById('btnToggleOutlook');
+          if(toggleBtn){ toggleBtn.onclick = async function(){
+            const next = !outlookEnabled; setOutlookEnabled(next);
+            await ipcInvoke('settings:set', { partial:{ outlook:{ enabled: next } } });
+            var op2 = document.getElementById('outlookPill'); if(op2) op2.textContent = 'Outlook: '+(next? 'activé':'désactivé');
+            flash('Outlook '+(next? 'activé':'désactivé'));
+          }; }
+          var syncNow = document.getElementById('btnOutlookSync');
+          if(syncNow){ syncNow.onclick = async function(){ await ipcInvoke('outlook:syncNow'); flash('Sync Outlook déclenchée'); }; }
+          var btnGraph = document.getElementById('btnGraph');
+          if(btnGraph){ btnGraph.onclick = async function(){
+            if(graph.connected){ await ipcInvoke('graph:logout'); flash('Graph déconnecté'); setGraph({ connected:false, account:null }); }
+            else { await ipcInvoke('graph:login'); const gs = await ipcInvoke('graph:status'); setGraph({ connected: !!gs?.connected, account: gs?.account||null }); flash('Graph connecté'); }
+            var gp2 = document.getElementById('graphPill'); if(gp2) gp2.textContent = 'Graph: '+((graph.connected)? 'connecté':'déconnecté');
+          }; }
+          var btnGlass = document.getElementById('btnGlass');
+          if(btnGlass){ btnGlass.onclick = async function(){
+            const next = !glass; setGlass(next); try{ document.body.classList.toggle('glass-on', next); }catch(_){}
+            await ipcInvoke('settings:set', { partial:{ ui:{ glass: next } } });
+            btnGlass.textContent = 'Glass: '+(next? 'on':'off');
+          }; }
+        }, [model, status, outlookEnabled, analytics, graph, glass]);
+
+        async function saveAll(){
+          const ok = await ipcInvoke('settings:set', { partial:{ masterPrompt:masterPrompt, tags:tags, rules:rules, conduct:conduct, llm:{ base_url: llm.baseUrl, model: llm.model, model_alias: llm.model }, ui:{ glass: glass } } });
+          if(ok===false) flash("Échec de l'enregistrement"); else flash('Paramètres enregistrés');
+        }
+
+        async function onAddNote(text){ const item = await ipcInvoke('knowledge:addNote', { text:text }); setKnowledge([].concat(knowledge||[], [ item || { id:'kn_'+Date.now(), type:'note', name:'Note '+(new Date().toLocaleString()), status:'indexé' } ])); }
+        async function onAddFile(){ const item = await ipcInvoke('knowledge:addFileDialog'); if(item){ setKnowledge([].concat(knowledge||[], [ item ])); } }
+        async function onRemove(id){ await ipcInvoke('knowledge:remove', { id:id }); setKnowledge((knowledge||[]).filter(function(k){ return k.id!==id; })); }
+        async function onReindex(){ await ipcInvoke('knowledge:reindex'); flash('Réindexation démarrée'); }
+
+        async function callLocalLLM(sampleEmail, prompt){
+          try{
+            const base = (llm.baseUrl || 'http://192.168.78.56:1234/v1').replace(/\/$/, '');
+            const url = base + '/chat/completions';
+            const sys = `${prompt}\n\nConsignes additionnelles: Réponds en français. Structure: \nSubject: <ligne>\nBody: <texte>.`;
+            const messages = [ { role:'system', content: sys }, { role:'user', content: `Email reçu:\n\n${sampleEmail}\n\nGénère une réponse professionnelle et concise, adaptée au contexte.` } ];
+            const payload = { model: llm.model || 'gpt-oss', messages, temperature: 0.2, max_tokens: 400, stream: false };
+            const resp = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+            if(!resp.ok){ throw new Error('HTTP '+resp.status); }
+            const data = await resp.json();
+            const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ? data.choices[0].message.content.trim() : '';
+            var subject = 'Re:'; var body = text;
+            try{ var m = text.match(/(?:Sujet|Subject)\s*:\s*(.+)/i); if(m){ subject = m[1].trim(); } }catch(_){}
+            return { subject_suggestion: subject, body: body };
+          }catch(err){ console.warn('LLM fallback error', err); flash('LLM local injoignable'); return null; }
+        }
+
+        async function onTestPrompt(sampleEmail, prompt){
+          const viaIpc = await ipcInvoke('prompt:test', { emailText: sampleEmail, masterPrompt: prompt, tags:tags, conduct:conduct, llm: llm });
+          if(viaIpc) return viaIpc; // backend handled
+          return await callLocalLLM(sampleEmail, prompt);
+        }
+
+        return e(Fragment, null,
+          e('div', { id:'navMount' }, e(Nav, { items:tabs, current:tab, onSelect:setTab })),
+          e('div', { className:'view '+(tab==='knowledge'?'active':'') }, e(Knowledge, { knowledge:knowledge, onAddNote:onAddNote, onAddFile:onAddFile, onRemove:onRemove, onReindex:onReindex })),
+          e('div', { className:'view '+(tab==='master'?'active':'') }, e(MasterPrompt, { masterPrompt:masterPrompt, setMasterPrompt:setMasterPrompt, onTestPrompt:onTestPrompt, llm: llm, setLlm: setLlm })),
+          e('div', { className:'view '+(tab==='tags'?'active':'') }, e(TagRules, { tags:tags, setTags:setTags, rules:rules, setRules:setRules })),
+          e('div', { className:'view '+(tab==='conduct'?'active':'') }, e(Conduct, { conduct:conduct, setConduct:setConduct })),
+          e('div', { className:'view '+(tab==='analytics'?'active':'') }, e(AnalyticsView, { analytics:analytics }))
+        );
+      }
+
+      function flash(msg){ var n=document.createElement('div'); n.textContent=msg; n.style.position='fixed'; n.style.bottom='18px'; n.style.right='18px'; n.style.background='var(--surface)'; n.style.border='1px solid var(--border)'; n.style.padding='10px 14px'; n.style.borderRadius='10px'; n.style.boxShadow='0 8px 18px var(--shadow)'; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 2000); }
+
+      // Render App
+      ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+
+      // Run smoke tests after first paint
+      window.requestAnimationFrame(function(){ try{ runSmokeTests(); }catch(e){ console.warn('Smoke tests failed to start', e); } });
+    })();
+  </script>
+</body>
+</html>
