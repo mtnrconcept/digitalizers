@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -20,7 +20,7 @@
       --glow: 0 0 0px rgba(20,230,255,.0), 0 0 18px rgba(20,230,255,.08), 0 0 36px rgba(20,230,255,.12);
       --glow-strong: 0 0 0px rgba(20,230,255,.0), 0 0 24px rgba(20,230,255,.18), 0 0 56px rgba(20,230,255,.22);
       /* inline SVG noise */
-      --noise: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\n  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter>\n  <rect width='100%' height='100%' filter='url(%23n)' opacity='0.11'/>\n</svg>");
+      --noise: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\n  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter>\n  <rect width='100%' height='100%' filter='url(%23n)' opacity='0.11'/ >\n</svg>");
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -65,10 +65,16 @@
     .nav{padding:12px}
     .nav button{width:100%;text-align:left;padding:11px 12px;border:0;background:linear-gradient(180deg, rgba(17,40,86,.45), rgba(13,28,62,.4));color:var(--text);
       border-radius:12px;display:flex;align-items:center;gap:10px;cursor:pointer;outline:1px solid rgba(60,120,200,.18);
-      box-shadow:inset 0 0 0 1px rgba(20,230,255,.05);position:relative}
+      box-shadow:inset 0 0 0 1px rgba(20,230,255,.05);position:relative;margin-bottom:8px}
     .nav button::before{content:"";width:6px;height:6px;border-radius:50%;background:#69e7ff;box-shadow:0 0 14px #69e7ff;opacity:.7}
     .nav button:hover{background:linear-gradient(180deg, rgba(25,62,128,.55), rgba(16,40,92,.5));box-shadow:var(--glow)}
     .nav button.active{background:linear-gradient(180deg, rgba(25,120,170,.45), rgba(16,60,130,.45));outline:1px solid rgba(100,200,255,.35);box-shadow:0 0 0 1px rgba(20,230,255,.2), var(--glow)}
+
+    /* Subnav panel (Dossiers sous Boîte de réception) */
+    .subnav-panel{margin:-2px 0 10px 18px;padding:10px;border:1px solid var(--border);border-radius:14px;
+      background:linear-gradient(180deg, rgba(14,28,60,.55), rgba(10,20,44,.48));box-shadow:0 6px 12px var(--shadow), inset 0 0 0 1px rgba(20,230,255,.06)}
+    .subnav-hd{color:#9fd5ff;font-size:11px;text-transform:uppercase;letter-spacing:.22em;margin:2px 0 8px 2px}
+
     .sidebar .foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;letter-spacing:.12em}
 
     /* Topbar */
@@ -101,7 +107,7 @@
       border-radius:var(--radius);box-shadow:0 10px 24px var(--shadow), var(--glow)}
     .card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);
       padding:1px;background:linear-gradient(135deg, rgba(31,220,255,.4), rgba(60,130,255,.25)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;}
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;}
     .card .hd{padding:10px 12px;border-bottom:1px solid var(--border);color:#9fd5ff;font-size:11px;text-transform:uppercase;letter-spacing:.22em}
     .card .bd{padding:12px}
 
@@ -120,47 +126,66 @@
     .right{margin-left:auto}
 
     /* Custom mini-widgets */
-    .hud-radar{width:86px;height:86px;border-radius:50%;position:relative;overflow:hidden;border:1px solid rgba(120,190,255,.35);
+    .hud-radar{width:clamp(64px, 6.5vw, 112px); aspect-ratio:1/1; border-radius:50%; position:relative; overflow:hidden; border:1px solid rgba(120,190,255,.35);
       background:
         radial-gradient(circle at 50% 50%, rgba(20,230,255,.18) 0 2px, transparent 2px 100%),
         radial-gradient(circle at 50% 50%, rgba(20,230,255,.15), transparent 65%);
-      box-shadow:var(--glow);margin-left:6px}
-    .hud-radar .ring{position:absolute;inset:10px;border-radius:50%;border:1px dashed rgba(120,200,255,.35)}
-    .hud-radar .r2{inset:22px}
-    .hud-radar .r3{inset:34px}
-    .hud-radar .sweep{position:absolute;inset:-20%;border-radius:50%;background:conic-gradient(from 0deg, rgba(20,230,255,.0) 0 86%, rgba(20,230,255,.22) 92% 100%);
-      animation:spin 3.8s linear infinite}
-    .hud-radar .dots{position:absolute;inset:0;background:radial-gradient(circle at 30% 60%, rgba(20,230,255,.8) 0 2px, transparent 3px),
-      radial-gradient(circle at 70% 28%, rgba(20,230,255,.6) 0 2px, transparent 3px),
-      radial-gradient(circle at 42% 40%, rgba(20,230,255,.55) 0 2px, transparent 3px);filter:drop-shadow(0 0 6px rgba(20,230,255,.8))}
+      box-shadow:var(--glow); margin-left:6px}
+    .hud-radar .ring{position:absolute; inset:12%; border-radius:50%; border:1px dashed rgba(120,200,255,.35)}
+    .hud-radar .r2{inset:28%}
+    .hud-radar .r3{inset:44%}
+    .hud-radar .sweep{position:absolute; inset:-20%; border-radius:50%; background:conic-gradient(from 0deg, rgba(20,230,255,0) 0 86%, rgba(20,230,255,.22) 92% 100%); animation:spin 3.8s linear infinite; transform-origin:50% 50%}
+    .hud-radar .env{position:absolute; width:16%; aspect-ratio:4/3; background-position:center; background-repeat:no-repeat; background-size:contain;
+      filter:drop-shadow(0 0 8px rgba(20,230,255,.85)); opacity:.95;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 18' fill='none' stroke='rgba(20,230,255,0.95)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='1' y='1' width='22' height='16' rx='2' ry='2' fill='rgba(20,230,255,0.08)'/><path d='M2 2l10 7 10-7'/></svg>");}
+    .hud-radar .e1{top:26%; left:22%; animation:floatA 3.6s ease-in-out infinite}
+    .hud-radar .e2{top:58%; left:66%; animation:floatB 4.4s ease-in-out infinite .2s}
+    .hud-radar .e3{top:38%; left:68%; animation:floatC 5.2s ease-in-out infinite .4s}
+    .hud-radar .e4{top:68%; left:28%; animation:floatB 4.8s ease-in-out infinite .1s}
 
-    /* GLASS MODE */
-    .glass-on .sidebar,
-    .glass-on .toolbar,
-    .glass-on .card,
-    .glass-on .pill,
-    .glass-on .btn,
-    .glass-on .input,
-    .glass-on .textarea,
-    .glass-on .select{
-      background:rgba(16,28,64,.33) !important; border-color:rgba(120,200,255,.35) !important; backdrop-filter: blur(12px) saturate(140%);
-    }
-    .glass-on .card::after,
-    .glass-on .toolbar::after,
-    .glass-on .sidebar::after{
-      content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:soft-light;opacity:.9;
-      background-image: var(--noise); background-size:200px 200px;
-    }
-    .glass-on .pill{box-shadow:0 0 0 1px rgba(120,220,255,.35), 0 0 24px rgba(20,230,255,.2)}
+    @keyframes floatA{0%{transform:translate(-4%, -2%) scale(1)}50%{transform:translate(3%, 2%) scale(1.05)}100%{transform:translate(-4%, -2%) scale(1)}}
+    @keyframes floatB{0%{transform:translate(3%, -3%) scale(1)}50%{transform:translate(-2%, 2%) scale(1.06)}100%{transform:translate(3%, -3%) scale(1)}}
+    @keyframes floatC{0%{transform:translate(-2%, 3%) scale(1)}50%{transform:translate(2%, -2%) scale(1.04)}100%{transform:translate(-2%, 3%) scale(1)}}
 
-    /* Scrollbar */
-    ::-webkit-scrollbar{width:10px;height:10px}
-    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(31,220,255,.45), rgba(80,140,255,.4));border-radius:20px}
-    ::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+    /* Added: generic spin/orbit animations (fixes radar + logo) */
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes orbit{to{transform:rotate(360deg)}}
+    /* -------- Styles spécifiques "Boîte de réception" -------- */
+    /* Grille sans la colonne "Dossiers" (désormais dans la sidebar) */
+    .inbox-grid{display:grid;grid-template-columns:420px minmax(540px, 1fr);gap:12px}
+    .emailRow{padding:10px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column}
+    .emailRow:hover{background:linear-gradient(180deg, rgba(25,62,128,.28), rgba(16,40,92,.28))}
+    .emailRow.unread .subject{font-weight:700}
+    .emailRow .meta{color:var(--muted);display:flex;align-items:center;gap:8px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#69e7ff;box-shadow:0 0 10px #69e7ff}
+
+    /* Folders tiles reused inside subnav */
+    .folder{padding:10px;border-radius:10px;cursor:pointer;color:var(--text);border:1px solid transparent;display:flex;align-items:center;justify-content:space-between}
+    .folder:hover{background:linear-gradient(180deg, rgba(17,40,86,.35), rgba(13,28,62,.3));border-color:rgba(100,200,255,.15)}
+    .folder.active{background:linear-gradient(180deg, rgba(25,120,170,.25), rgba(16,60,130,.25));border-color:rgba(120,220,255,.35);box-shadow:var(--glow)}
+    .folder .count{padding:2px 7px;border:1px solid rgba(120,220,255,.35);border-radius:999px;font-size:12px;background:rgba(20,230,255,.12);color:#dffbff}
+
+    .badgeUrg{padding:2px 8px;border-radius:999px;font-size:12px;margin-left:6px;border:1px solid transparent;white-space:nowrap}
+    .urg-urgent{background:rgba(255,77,109,.18);border-color:var(--danger);color:#ffd7de}
+    .urg-medium{background:rgba(255,176,32,.18);border-color:var(--warn);color:#ffe7c4}
+    .urg-low{background:rgba(52,199,89,.18);border-color:var(--success);color:#d9ffd9}
+
+    /* Digest résumé */
+    .summaryBox{background:linear-gradient(180deg, rgba(18,32,70,.7), rgba(12,26,58,.7));border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px}
+    .summaryHeader{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+    .summaryStats{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#cfefff}
+    .summaryActions{display:flex;gap:8px;margin-left:auto}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
   </style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">NSX2YFTTSVUD-1009100899-466592</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">1658a3f4-8ddc-4e51-b15c-34fed20c949e</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://digitalizers.sharepoint.com/sites/MESgestion/_layouts/15/DocIdRedir.aspx?ID=NSX2YFTTSVUD-1009100899-466592, NSX2YFTTSVUD-1009100899-466592</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
 </head>
 <body>
   <div class="app">
@@ -185,7 +210,10 @@
         <div class="ring r1"></div>
         <div class="ring r2"></div>
         <div class="ring r3"></div>
-        <div class="dots"></div>
+        <div class="env e1" title="email détecté"></div>
+        <div class="env e2" title="email détecté"></div>
+        <div class="env e3" title="email détecté"></div>
+        <div class="env e4" title="email détecté"></div>
       </div>
       <button class="btn" id="btnToggleOutlook" title="Activer/Désactiver l'ingestion Outlook">Basculer Outlook</button>
       <button class="btn" id="btnOutlookSync" title="Forcer une synchronisation Outlook">Sync Outlook</button>
@@ -200,7 +228,7 @@
     </main>
   </div>
 
-  <!-- Global error catcher to surface details -->
+  <!-- Global error catcher -->
   <script>
     (function(){
       function setStatus(msg){ var p=document.getElementById('statusPill'); if(p){ p.textContent='Statut: '+msg; } }
@@ -218,12 +246,7 @@
 
       function mergeProps(base, extra){
         const out = Object.assign({}, base||{});
-        if(extra){
-          for(const k in extra){
-            if(k === 'className' && out.className){ out.className += ' ' + extra.className; }
-            else { out[k] = extra[k]; }
-          }
-        }
+        if(extra){ for(const k in extra){ if(k==='className' && out.className){ out.className += ' '+extra.className; } else { out[k]=extra[k]; } } }
         return out;
       }
 
@@ -235,17 +258,6 @@
       }
 
       // Shared UI primitives
-      function Nav(props){
-        const items = props.items || [];
-        const current = props.current;
-        const onSelect = props.onSelect || function(){};
-        return e(Fragment, null, items.map(function(it){
-          return e('button', { key: it.id, className: current===it.id?'active':'', onClick: function(){ onSelect(it.id); } },
-            it.icon || '•', ' ', e('span', null, it.label)
-          );
-        }));
-      }
-
       function Section(props){
         return e('section', { className:'section' },
           e('h2', null, props.title),
@@ -288,6 +300,225 @@
         );
       }
 
+      // ---------------- Boîte de réception ----------------
+
+      const INITIAL_FOLDERS = [
+        { id:'a_traiter', label:'À traiter' },
+        { id:'pour_info', label:'Pour info' },
+        { id:'notifications', label:'Notifications' },
+        { id:'newsletters', label:'Newsletters' },
+        { id:'spam', label:'Spam' },
+      ];
+
+      const DEMO_EMAILS = [
+        { id:'e1', from:'contact@fournisseur.ch', subject:'Devis 2025', date:'19.08.2025 12:18:32', body:"Merci de valider le devis 2025.", folder:'a_traiter', urgency:'low', read:false },
+        { id:'e2', from:'support@service.com', subject:'[URGENT] Incident 8412', date:'19.08.2025 11:18:32', body:"Panne système en production.", folder:'a_traiter', urgency:'urgent', read:false },
+        { id:'e3', from:'newsletter@produit.io', subject:'Nouveautés du mois', date:'18.08.2025', body:'Découvrez nos articles et annonces.', folder:'newsletters', urgency:'low', read:true },
+        { id:'e4', from:'factures@fournisseur.com', subject:'Facture Juillet à régler', date:'17.08.2025', body:'Merci pour votre règlement sous 7 jours.', folder:'pour_info', urgency:'medium', read:false },
+      ];
+
+      function urgencyRank(u){ return u==='urgent'?0 : u==='medium'?1 : 2; }
+
+      function inferAction(email){
+        const s = (email.subject||'').toLowerCase();
+        if(s.includes('incident')||s.includes('panne')||s.includes('erreur')) return `Résoudre l'incident: "${email.subject}" (répondre ${email.from}).`;
+        if(s.includes('facture')||s.includes('invoice')) return `Régler la facture: "${email.subject}".`;
+        if(s.includes('devis')||s.includes('quote')) return `Valider le devis: "${email.subject}".`;
+        if(s.includes('réunion')||s.includes('meeting')||s.includes('rdv')) return `Confirmer/planifier la réunion: "${email.subject}".`;
+        if(s.includes('invitation')) return `Répondre à l'invitation: "${email.subject}".`;
+        if(s.includes('contrat')) return `Revoir et valider le contrat: "${email.subject}".`;
+        if(s.includes('commande')||s.includes('order')) return `Confirmer/traiter la commande: "${email.subject}".`;
+        return `Lire et répondre: "${email.subject}".`;
+      }
+
+      function summarizeEmail(em){
+        const body = (em.body||'').replace(/\s+/g, ' ').trim();
+        let snippet = body.slice(0, 160);
+        if(body.length>160) snippet += '…';
+        return `• ${em.subject} — ${snippet}`;
+      }
+
+      function DigestPanel(props){
+        const state = props.state || { emails:[] };
+        const selectedEmails = props.selectedEmails || [];
+        const [done, setDone] = useState({});
+        function toggle(id){ setDone(function(prev){ var n=Object.assign({}, prev); n[id]=!prev[id]; return n; }); }
+
+        function buildSelectionSummary(){
+          if(!selectedEmails.length) return null;
+          const lines = [];
+          lines.push(`Synthèse de ${selectedEmails.length} email(s) sélectionné(s):`);
+          selectedEmails.forEach(function(em, i){
+            lines.push(`${i+1}. ${summarizeEmail(em)}`);
+            lines.push(`   Action suggérée: ${inferAction(em)} (${em.urgency}).`);
+          });
+          return lines.join('\n');
+        }
+
+        function buildInboxSummary(){
+          const unread = (state.emails||[]).filter(em => !em.read && !done[em.id]);
+          if(unread.length===0){ return 'Toutes les tâches sont traitées. Aucune action prioritaire.'; }
+          const urgCnt = { urgent:0, medium:0, low:0 };
+          unread.forEach(function(em){ urgCnt[em.urgency] = (urgCnt[em.urgency]||0)+1; });
+          const top = unread.slice().sort(function(a,b){ return urgencyRank(a.urgency)-urgencyRank(b.urgency); }).slice(0,5);
+          const topLines = top.map(function(em, i){ return `- ${i+1}. ${inferAction(em)} (${em.urgency}).`; }).join('\n');
+          const perFolder = INITIAL_FOLDERS.map(function(f){ var c = unread.filter(function(em){ return em.folder===f.id; }).length; return c? `${f.label}: ${c}`:null; }).filter(Boolean).join(' • ');
+          return `Résumé des tâches non lues (${unread.length}): ${urgCnt.urgent||0} urgentes, ${urgCnt.medium||0} moyennes, ${urgCnt.low||0} faibles.\nPriorités immédiates:\n${topLines}\nRépartition dossiers: ${perFolder || '—'}`;
+        }
+
+        function copyText(text){
+          if(!text) return;
+          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ flash('Résumé copié'); }); }
+          else { var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); flash('Résumé copié'); } finally { ta.remove(); } }
+        }
+
+        const selSummary = buildSelectionSummary();
+        const inboxSummary = buildInboxSummary();
+
+        const unreadByFolder = function(fid){ return (state.emails||[]).filter(function(em){ return em.folder===fid && !em.read && !done[em.id]; }); };
+
+        return e('div', { className:'card' },
+          e('div', { className:'hd' }, 'Digest – Vue globale + sélection'),
+          e('div', { className:'bd' },
+            selSummary ? e('div', { className:'summaryBox' },
+              e('div', { className:'summaryHeader' }, e('strong', null, 'Résumé de la sélection'), e('div', { className:'summaryActions' }, e('button', { className:'btn', onClick:function(){ copyText(selSummary); } }, 'Copier'))),
+              e('pre', { className:'mono', style:{ whiteSpace:'pre-wrap', margin:0 } }, selSummary)
+            ) : null,
+
+            e('div', { className:'summaryBox' },
+              e('div', { className:'summaryHeader' }, e('strong', null, 'Résumé boîte de réception'), e('div', { className:'summaryActions' }, e('button', { className:'btn', onClick:function(){ copyText(inboxSummary); } }, 'Copier'))),
+              e('pre', { className:'mono', style:{ whiteSpace:'pre-wrap', margin:0 } }, inboxSummary)
+            ),
+
+            INITIAL_FOLDERS.map(function(f){
+              const tasks = (state.emails||[])
+                .filter(function(em){ return em.folder===f.id; })
+                .sort(function(a,b){ return urgencyRank(a.urgency) - urgencyRank(b.urgency); });
+              return e('div', { key:f.id, style:{ marginTop:'16px' } },
+                e('div', { style:{ fontWeight:'bold', marginBottom:'6px' } }, f.label,
+                  unreadByFolder(f.id).length? e('span', { className:'badgeUrg', style:{ marginLeft:8, borderColor:'rgba(120,220,255,.35)' } }, unreadByFolder(f.id).length+' non lus') : null
+                ),
+                tasks.length>0 ? tasks.map(function(t){
+                  const cls = 'badgeUrg '+(t.urgency==='urgent'?'urg-urgent':t.urgency==='medium'?'urg-medium':'urg-low');
+                  return e('label', { key:t.id, style:{ display:'flex', alignItems:'center', gap:'6px', marginBottom:'4px', opacity: t.read? .6:1 } },
+                    e('input', { type:'checkbox', checked:!!done[t.id], onChange:function(){ toggle(t.id); } }),
+                    e('span', { style:{ flex:1 } }, t.subject),
+                    e('span', { className:cls }, t.urgency),
+                    !t.read ? e('span', { className:'dot', title:'non lu' }) : null
+                  );
+                }) : e('div', { style:{ color:'var(--muted)', marginLeft:'16px' } }, 'Aucune tâche')
+              );
+            })
+          )
+        );
+      }
+
+      function InboxView(props){
+        const state = props.state || { emails:[] };
+        const setEmails = props.setEmails || function(){};
+        const folder = props.folder || 'a_traiter';
+        const setFolder = props.setFolder || function(){};
+        const [selected, setSelected] = useState(null); // pour l'aperçu
+        const [showDigest, setShowDigest] = useState(true);
+        const [selMap, setSelMap] = useState({}); // sélection multiple pour digest
+
+        const list = (state.emails||[]).filter(function(em){ return em.folder===folder; });
+        const selectedEmails = (state.emails||[]).filter(function(em){ return !!selMap[em.id]; });
+
+        function toggleSelect(id, ev){ if(ev) ev.stopPropagation(); setSelMap(function(prev){ var n=Object.assign({}, prev); n[id]=!prev[id]; return n; }); }
+
+        function openEmail(em){
+          setSelected(em);
+          // marquer comme lu à l'ouverture
+          const next = (state.emails||[]).map(function(x){ return x.id===em.id? Object.assign({}, x, { read:true }): x; });
+          setEmails(next);
+        }
+
+        return e(Section, { title:'Boîte de réception', subtitle:'Dossiers → (dans la barre de gauche) • liste → aperçu (à droite) • Digest contextuel' },
+          e(Card, {
+              title:'Vue et analyse des emails',
+              right: e('div', { className:'row' },
+                e('button', { className:'btn', onClick:function(){ setShowDigest(!showDigest); } }, (showDigest?'Masquer':'📑 Afficher')+' Digest')
+              )
+            },
+            e('div', { className:'inbox-grid' },
+              // Col 1: Emails (les dossiers sont dans la sidebar)
+              e('div', { className:'card' },
+                e('div', { className:'hd' }, 'Emails'),
+                e('div', { className:'bd' },
+                  list.map(function(em){
+                    return e('div', { key:em.id, className:'emailRow'+(!em.read?' unread':''), onClick:function(){ openEmail(em); } },
+                      e('div', { className:'meta' },
+                        e('input', { type:'checkbox', checked:!!selMap[em.id], onChange:function(ev){ toggleSelect(em.id, ev); } }),
+                        !em.read ? e('span', { className:'dot', title:'non lu' }) : null,
+                        e('strong', null, em.from),
+                        e('span', null, '•'),
+                        e('span', null, em.date),
+                        e('span', { className:'badgeUrg '+(em.urgency==='urgent'?'urg-urgent':em.urgency==='medium'?'urg-medium':'urg-low') }, em.urgency)
+                      ),
+                      e('div', { className:'subject' }, em.subject)
+                    );
+                  })
+                )
+              ),
+              // Col 2: Aperçu
+              e('div', { className:'card' },
+                e('div', { className:'hd' }, 'Aperçu'),
+                e('div', { className:'bd' },
+                  selected ?
+                    e('div', null,
+                      e('div', { style:{ fontWeight:'bold', marginBottom:'4px' } }, selected.subject),
+                      e('div', { style:{ color:'var(--muted)', marginBottom:'8px' } }, 'De ', selected.from, ' • ', selected.date),
+                      e('div', null, selected.body),
+                      e('div', { style:{ marginTop:'8px', display:'flex', gap:'8px', alignItems:'center' } },
+                        e('span', { className: 'badgeUrg ' + (selected.urgency==='urgent'?'urg-urgent':selected.urgency==='medium'?'urg-medium':'urg-low') }, selected.urgency)
+                      )
+                    )
+                  : e('div', { style:{ color:'var(--muted)' } }, 'Sélectionnez un email.')
+                )
+              )
+            ),
+            showDigest ? e(DigestPanel, { state:{ emails: state.emails }, selectedEmails: selectedEmails }) : null
+          )
+        );
+      }
+
+      // ---------------- Sidebar menu (onglets + sous-menu dossiers) ----------------
+      function SidebarMenu(props){
+        const items = props.items || [];
+        const current = props.current;
+        const onSelect = props.onSelect || function(){};
+        const inboxOpen = !!props.inboxOpen;
+        const onToggleInboxOpen = props.onToggleInboxOpen || function(){};
+        const folders = props.folders || [];
+        const folderSelected = props.folderSelected;
+        const onSelectFolder = props.onSelectFolder || function(){};
+        const emails = props.emails || [];
+        function unreadCount(fid){ return (emails||[]).filter(function(e){ return e.folder===fid && !e.read; }).length; }
+
+        return e(Fragment, null, items.map(function(it){
+          const isInbox = it.id==='inbox';
+          return e(Fragment, { key:it.id },
+            e('button', {
+              className: current===it.id? 'active' : '',
+              onClick: function(){ onSelect(it.id); if(isInbox){ onToggleInboxOpen(!inboxOpen); } }
+            }, it.icon || '•', ' ', e('span', null, it.label), isInbox ? e('span', { className:'right', style:{opacity:.8,fontSize:'12px'} }, inboxOpen?'▾':'▸') : null ),
+            isInbox && inboxOpen ? e('div', { className:'subnav-panel' },
+              e('div', { className:'subnav-hd' }, 'Dossiers'),
+              folders.map(function(f){
+                var cls = 'folder'+(folderSelected===f.id?' active':'');
+                return e('div', { key:f.id, className:cls, onClick:function(ev){ ev.stopPropagation(); onSelect('inbox'); onSelectFolder(f.id); } },
+                  e('span', null, f.label),
+                  e('span', { className:'count' }, unreadCount(f.id))
+                );
+              })
+            ) : null
+          );
+        }));
+      }
+
+      // ---------------- Views existantes ----------------
+
       // Knowledge
       function Knowledge(props){
         const knowledge = props.knowledge || [];
@@ -295,9 +526,7 @@
         const onAddFile = props.onAddFile || function(){};
         const onRemove = props.onRemove || function(){};
         const onReindex = props.onReindex || function(){};
-        const _React = React; // avoid shadowing
-        const _useState = _React.useState;
-        const _tmp = _useState('');
+        const _tmp = useState('');
         const noteText = _tmp[0];
         const setNoteText = _tmp[1];
         return e(Section, { title:'Knowledge', subtitle:'La base se peuple automatiquement depuis Outlook (corps + pièces jointes). Vous pouvez aussi ajouter manuellement.' },
@@ -352,7 +581,7 @@
                 e(Input, { label:'Base URL', placeholder:'http://192.168.78.56:1234/v1', value: llm.baseUrl||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { baseUrl: ev.target.value })); } }),
                 e(Input, { label:'Modèle', placeholder:'gpt-oss', value: llm.model||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { model: ev.target.value })); } })
               ),
-              e(TextArea, { rows:14, value:masterPrompt, onChange:function(evv){ setMasterPrompt(evv.target.value); }, placeholder:"Ex: Tu es un assistant email pour un professionnel. Règles: concision, clarté, pas d\'excuses inutiles, pas d\'hallucinations…" })
+              e(TextArea, { rows:14, value:masterPrompt, onChange:function(evv){ setMasterPrompt(evv.target.value); }, placeholder:"Ex: Tu es un assistant email pour un professionnel. Règles: concision, clarté, pas d'hallucinations…" })
             ),
             e(Card, { title:'Tester', right: e('button', { className:'btn', onClick:test }, testing ? 'Génération…' : 'Générer un brouillon') },
               e(TextArea, { label:"Email d'exemple", rows:8, value:sample, onChange:function(evv){ setSample(evv.target.value); } }),
@@ -528,8 +757,10 @@
       }
 
       // App
+      let navRoot = null; // React root for sidebar nav
       function App(){
         const tabs = [
+          { id:'inbox', label:'Boîte de réception', icon:'📥' },
           { id:'knowledge', label:'Knowledge', icon:'📚' },
           { id:'master', label:'Master prompt', icon:'🧠' },
           { id:'tags', label:'Attribution de tags', icon:'🏷️' },
@@ -537,7 +768,10 @@
           { id:'analytics', label:'Analytics', icon:'📊' },
         ];
 
-        const _t = useState('knowledge'); const tab = _t[0]; const setTab = _t[1];
+        const _t = useState('inbox'); const tab = _t[0]; const setTab = _t[1];
+        const _inb = useState(true); const inboxOpen = _inb[0]; const setInboxOpen = _inb[1];
+        const _folder = useState('a_traiter'); const folder = _folder[0]; const setFolder = _folder[1];
+
         const _m = useState('—'); const model = _m[0]; const setModel = _m[1];
         const _s = useState('hors ligne'); const status = _s[0]; const setStatus = _s[1];
         const _o = useState(false); const outlookEnabled = _o[0]; const setOutlookEnabled = _o[1];
@@ -557,6 +791,27 @@
         const _r = useState([]); const rules = _r[0]; const setRules = _r[1];
         const _c = useState({ tone:'professionnel mais chaleureux', formality:'moyen', useBullets:true, noEmojis:true, brief:true, signature:'Bien à vous,\nNom', do:'Structurer par paragraphes courts.', dont:'Ne pas inventer de faits.' }); const conduct = _c[0]; const setConduct = _c[1];
         const _a = useState({ processed:0, pending:0, drafts:0, perTag:{}, perUrgency:{} }); const analytics = _a[0]; const setAnalytics = _a[1];
+
+        // Boîte de réception (état local)
+        const _em = useState(DEMO_EMAILS); const emails = _em[0]; const setEmails = _em[1];
+
+        // Mount/Update sidebar nav with subpanel under Inbox
+        useEffect(function(){
+          const el = document.getElementById('nav');
+          if(el){ if(!navRoot){ navRoot = ReactDOM.createRoot(el); }
+            navRoot.render(e(SidebarMenu, {
+              items: tabs,
+              current: tab,
+              onSelect: setTab,
+              inboxOpen: inboxOpen,
+              onToggleInboxOpen: setInboxOpen,
+              folders: INITIAL_FOLDERS,
+              folderSelected: folder,
+              onSelectFolder: setFolder,
+              emails: emails
+            }));
+          }
+        }, [tab, inboxOpen, folder, emails]);
 
         // Load settings from backend
         useEffect(function(){ (async function(){
@@ -610,7 +865,7 @@
           }; }
           var btnGlass = document.getElementById('btnGlass');
           if(btnGlass){ btnGlass.onclick = async function(){
-            const next = !glass; setGlass(next); try{ document.body.classList.toggle('glass-on', next); }catch(_){}
+            const next = !glass; setGlass(next); try{ document.body.classList.toggle('glass-on', next); }catch(_){ }
             await ipcInvoke('settings:set', { partial:{ ui:{ glass: next } } });
             btnGlass.textContent = 'Glass: '+(next? 'on':'off');
           }; }
@@ -638,7 +893,7 @@
             const data = await resp.json();
             const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ? data.choices[0].message.content.trim() : '';
             var subject = 'Re:'; var body = text;
-            try{ var m = text.match(/(?:Sujet|Subject)\s*:\s*(.+)/i); if(m){ subject = m[1].trim(); } }catch(_){}
+            try{ var m = text.match(/(?:Sujet|Subject)\s*:\s*(.+)/i); if(m){ subject = m[1].trim(); } }catch(_){ }
             return { subject_suggestion: subject, body: body };
           }catch(err){ console.warn('LLM fallback error', err); flash('LLM local injoignable'); return null; }
         }
@@ -650,7 +905,8 @@
         }
 
         return e(Fragment, null,
-          e('div', { id:'navMount' }, e(Nav, { items:tabs, current:tab, onSelect:setTab })),
+          // Navigation : rendu dans la sidebar (#nav) via SidebarMenu
+          e('div', { className:'view '+(tab==='inbox'?'active':'') }, e(InboxView, { state:{ emails: emails }, setEmails:setEmails, folder:folder, setFolder:setFolder })),
           e('div', { className:'view '+(tab==='knowledge'?'active':'') }, e(Knowledge, { knowledge:knowledge, onAddNote:onAddNote, onAddFile:onAddFile, onRemove:onRemove, onReindex:onReindex })),
           e('div', { className:'view '+(tab==='master'?'active':'') }, e(MasterPrompt, { masterPrompt:masterPrompt, setMasterPrompt:setMasterPrompt, onTestPrompt:onTestPrompt, llm: llm, setLlm: setLlm })),
           e('div', { className:'view '+(tab==='tags'?'active':'') }, e(TagRules, { tags:tags, setTags:setTags, rules:rules, setRules:setRules })),
