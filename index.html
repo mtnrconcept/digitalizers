@@ -12,45 +12,66 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     :root{
-      /* Neon HUD palette */
+      /* ====== DARK THEME (par défaut) ====== */
+      /* Palette */
       --bg:#070b14; --surface:#0b1220; --surface-2:#0e1830; --surface-3:#122043;
-      --text:#eaf6ff; --muted:#9db1c9; --primary:#14e6ff; --accent:#4aa8ff; --success:#34C759;
+      --text:#0; /* (placeholder, recalculé via body color) */
+      --fg:#eaf6ff; --muted:#9db1c9; --primary:#14e6ff; --accent:#4aa8ff; --success:#34C759;
       --danger:#ff4d6d; --warn:#ffb020; --idle:#8ca0b8; --info:#5AC8FA; --border:#1b2a4a; --shadow:rgba(0,8,20,.35);
       --radius:16px; --radius-sm:12px; --radius-xs:10px;
       --glow: 0 0 0px rgba(20,230,255,.0), 0 0 18px rgba(20,230,255,.08), 0 0 36px rgba(20,230,255,.12);
       --glow-strong: 0 0 0px rgba(20,230,255,.0), 0 0 24px rgba(20,230,255,.18), 0 0 56px rgba(20,230,255,.22);
+      /* Arrière-plan de l'application (gradient encapsulé dans une variable) */
+      --app-bg: radial-gradient(1200px 800px at 10% -10%, #0c1a35 0%, transparent 35%),
+                radial-gradient(900px 600px at 110% 10%, #081226 0%, transparent 40%),
+                linear-gradient(180deg,#050a15 0%, #0a1426 100%);
       /* inline SVG noise */
       --noise: url("data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\n  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter>\n  <rect width='100%' height='100%' filter='url(%23n)' opacity='0.11'/ >\n</svg>");
     }
+
+    /* ====== LIGHT THEME overrides (activé via .theme-light sur <html>) ====== */
+    :root.theme-light{
+      --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f6f9ff; --surface-3:#eef3fb;
+      --fg:#0d1117; --muted:#5b6b7c; --primary:#1067f0; --accent:#2b7fff; --success:#148f3d;
+      --danger:#d7264e; --warn:#b57400; --idle:#6b7a8a; --info:#007aff; --border:#dde6f2; --shadow:rgba(0,0,0,.08);
+      --app-bg: radial-gradient(1200px 800px at 10% -10%, #ffffff 0%, transparent 32%),
+                radial-gradient(900px 600px at 110% 10%, #eef5ff 0%, transparent 36%),
+                linear-gradient(180deg,#f7faff 0%, #ffffff 70%);
+    }
+
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:radial-gradient(1200px 800px at 10% -10%, #0c1a35 0%, transparent 35%),
-                     radial-gradient(900px 600px at 110% 10%, #081226 0%, transparent 40%),
-                     linear-gradient(180deg,#050a15 0%, #0a1426 100%);
-         color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;letter-spacing:.1px}
+    body{margin:0;background:var(--app-bg);color:var(--fg);
+         font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;letter-spacing:.1px}
 
     /* global futuristic overlays */
     body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;
       background:
-        radial-gradient(circle at 30% 20%, #14e6ff 0 2px, transparent 3px),
-        radial-gradient(circle at 70% 80%, #14e6ff 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 20%, var(--primary) 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 80%, var(--primary) 0 2px, transparent 3px),
         linear-gradient(transparent 95%, rgba(20,230,255,.18) 100%),
         repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 48px);
       background-size: 800px 800px, 1200px 1200px, 100% 4px, 48px 100%;
       mix-blend-mode: screen; z-index:0}
-    body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.06;z-index:0;
+    body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.04;z-index:0;
       background:repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px); /* scanlines */}
+    :root.theme-light body::before{opacity:.06; mix-blend-mode:normal;}
+    :root.theme-light body::after{opacity:.03}
 
     .app{position:relative;z-index:1;display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr;gap:0;height:100vh}
 
     /* Sidebar */
     .sidebar{grid-row:1/span 2;background:linear-gradient(180deg, rgba(10,25,56,.7), rgba(10,22,44,.6));
       border-right:1px solid var(--border);display:flex;flex-direction:column;backdrop-filter: blur(6px)}
+    :root.theme-light .sidebar{background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,251,255,.85))}
+
     .brand{display:flex;align-items:center;gap:.8rem;padding:18px;border-bottom:1px solid var(--border);position:relative}
     .brand::after{content:"ACTIVATED";position:absolute;right:12px;top:12px;color:#79e9ff;font-size:11px;letter-spacing:.18em;opacity:.7}
+    :root.theme-light .brand::after{color:#4098ff;opacity:.6}
     .brand .logo{width:42px;height:42px;border-radius:50%;position:relative;box-shadow:var(--glow-strong);
       background:radial-gradient(circle at 30% 30%, #1bdfff 0 20%, #0a1630 60%);
       overflow:hidden}
+    :root.theme-light .brand .logo{background:radial-gradient(circle at 30% 30%, #69d6ff 0 20%, #bfe4ff 60%)}
     .brand .logo::before{content:"";position:absolute;inset:0;border-radius:50%;
       background:
         radial-gradient(circle at 50% 50%, transparent 58%, rgba(20,230,255,.25) 59% 60%, transparent 61%),
@@ -61,19 +82,25 @@
       background:conic-gradient(from 0deg, rgba(20,230,255,.4), rgba(20,230,255,0) 35% 100%);
       transform-origin:50% 50%;animation:spin 6s linear infinite}
     .brand h1{font-size:15px;margin:0;font-weight:800;letter-spacing:.22em;color:#dff7ff;text-transform:uppercase}
+    :root.theme-light .brand h1{color:#0d2b4a}
 
     .nav{padding:12px}
-    .nav button{width:100%;text-align:left;padding:11px 12px;border:0;background:linear-gradient(180deg, rgba(17,40,86,.45), rgba(13,28,62,.4));color:var(--text);
+    .nav button{width:100%;text-align:left;padding:11px 12px;border:0;background:linear-gradient(180deg, rgba(17,40,86,.45), rgba(13,28,62,.4));color:var(--fg);
       border-radius:12px;display:flex;align-items:center;gap:10px;cursor:pointer;outline:1px solid rgba(60,120,200,.18);
       box-shadow:inset 0 0 0 1px rgba(20,230,255,.05);position:relative;margin-bottom:8px}
     .nav button::before{content:"";width:6px;height:6px;border-radius:50%;background:#69e7ff;box-shadow:0 0 14px #69e7ff;opacity:.7}
     .nav button:hover{background:linear-gradient(180deg, rgba(25,62,128,.55), rgba(16,40,92,.5));box-shadow:var(--glow)}
     .nav button.active{background:linear-gradient(180deg, rgba(25,120,170,.45), rgba(16,60,130,.45));outline:1px solid rgba(100,200,255,.35);box-shadow:0 0 0 1px rgba(20,230,255,.2), var(--glow)}
+    :root.theme-light .nav button{background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(245,249,255,.9));outline:1px solid var(--border);box-shadow:none}
+    :root.theme-light .nav button:hover{background:linear-gradient(180deg, rgba(255,255,255,1), rgba(245,249,255,1))}
+    :root.theme-light .nav button.active{background:linear-gradient(180deg, #eaf2ff, #e6f0ff);outline:1px solid #c5dbff;box-shadow:0 0 0 1px #cfe0ff}
 
     /* Subnav panel (Dossiers sous Boîte de réception) */
     .subnav-panel{margin:-2px 0 10px 18px;padding:10px;border:1px solid var(--border);border-radius:14px;
       background:linear-gradient(180deg, rgba(14,28,60,.55), rgba(10,20,44,.48));box-shadow:0 6px 12px var(--shadow), inset 0 0 0 1px rgba(20,230,255,.06)}
     .subnav-hd{color:#9fd5ff;font-size:11px;text-transform:uppercase;letter-spacing:.22em;margin:2px 0 8px 2px}
+    :root.theme-light .subnav-panel{background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,253,255,.95)); box-shadow:0 6px 12px var(--shadow)}
+    :root.theme-light .subnav-hd{color:#3b5ea7}
 
     .sidebar .foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;letter-spacing:.12em}
 
@@ -81,6 +108,9 @@
     .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg, rgba(14,28,60,.7), rgba(10,20,44,.6));
       border-bottom:1px solid var(--border);position:relative}
     .toolbar::after{content:"";position:absolute;inset:-1px 0 auto 0;height:1px;background:linear-gradient(90deg, transparent, #1fdcff 20%, transparent 60%, #1fdcff 80%, transparent);opacity:.6}
+    :root.theme-light .toolbar{background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,251,255,.9))}
+    :root.theme-light .toolbar::after{background:linear-gradient(90deg, transparent, #c6ddff 20%, transparent 60%, #c6ddff 80%, transparent); opacity:.7}
+
     .toolbar .spacer{flex:1}
 
     /* Neon pills & buttons */
@@ -89,6 +119,9 @@
     .btn:hover{transform:translateY(-1px);box-shadow:var(--glow-strong)}
     .btn.primary{background:linear-gradient(135deg, rgba(20,230,255,.2), rgba(60,130,255,.16));border-color:rgba(120,220,255,.45)}
     .btn[disabled]{opacity:.6;cursor:not-allowed;filter:grayscale(.2)}
+    :root.theme-light .pill{border-color:#cfe0ff;background:linear-gradient(180deg, #ffffff, #f5f9ff); color:#234}
+    :root.theme-light .btn{background:linear-gradient(180deg, #ffffff, #f5f9ff); border:1px solid #cfe0ff; color:#213043; box-shadow:none}
+    :root.theme-light .btn.primary{background:linear-gradient(135deg, #eaf2ff, #dfeaff); border-color:#c5d7ff}
 
     .main{display:block;height:100%;}
 
@@ -97,6 +130,7 @@
 
     .section{padding:16px}
     .section h2{margin:0 0 8px 0;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:#ccf6ff}
+    :root.theme-light .section h2{color:#345}
     .sub{color:var(--muted);font-size:12px;margin-bottom:12px}
 
     .grid{display:grid;gap:14px}
@@ -108,20 +142,30 @@
     .card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);
       padding:1px;background:linear-gradient(135deg, rgba(31,220,255,.4), rgba(60,130,255,.25)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;}
+    :root.theme-light .card{background:linear-gradient(180deg, #ffffff, #f7faff); border-color:#dbe6f4; box-shadow:0 8px 18px var(--shadow)}
+    :root.theme-light .card::before{background:linear-gradient(135deg, rgba(180,200,255,.45), rgba(160,190,255,.35))}
+
     .card .hd{padding:10px 12px;border-bottom:1px solid var(--border);color:#9fd5ff;font-size:11px;text-transform:uppercase;letter-spacing:.22em}
     .card .bd{padding:12px}
+    :root.theme-light .card .hd{color:#3a5fae}
 
     .field{display:flex;flex-direction:column;gap:6px}
-    .input, .textarea, .select{background:linear-gradient(180deg, rgba(12,28,62,.8), rgba(10,22,44,.85));border:1px solid rgba(120,170,230,.25);border-radius:12px;color:var(--text);padding:10px;outline:none;box-shadow:inset 0 0 0 1px rgba(20,230,255,.03)}
+    .input, .textarea, .select{background:linear-gradient(180deg, rgba(12,28,62,.8), rgba(10,22,44,.85));border:1px solid rgba(120,170,230,.25);border-radius:12px;color:var(--fg);padding:10px;outline:none;box-shadow:inset 0 0 0 1px rgba(20,230,255,.03)}
     .input:focus, .textarea:focus, .select:focus{box-shadow:0 0 0 1px rgba(20,230,255,.35), var(--glow)}
     .textarea{min-height:160px;resize:vertical}
+    :root.theme-light .input, :root.theme-light .textarea, :root.theme-light .select{background:#ffffff;border:1px solid #dbe6f4;color:#0d1117;box-shadow:none}
+    :root.theme-light .input:focus, :root.theme-light .textarea:focus, :root.theme-light .select:focus{outline:2px solid #c8dbff}
+
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
     .table th{color:#8fbfea;font-size:11px;text-transform:uppercase;letter-spacing:.22em}
+    :root.theme-light .table th{color:#4a6aa8}
 
     .metric{font-size:28px;font-weight:800;color:#e9fbff;text-shadow:0 0 24px rgba(20,230,255,.2)}
+    :root.theme-light .metric{color:#0a2e5a;text-shadow:none}
+
     .muted{color:var(--muted)}
     .right{margin-left:auto}
 
@@ -142,34 +186,41 @@
     .hud-radar .e2{top:58%; left:66%; animation:floatB 4.4s ease-in-out infinite .2s}
     .hud-radar .e3{top:38%; left:68%; animation:floatC 5.2s ease-in-out infinite .4s}
     .hud-radar .e4{top:68%; left:28%; animation:floatB 4.8s ease-in-out infinite .1s}
+    :root.theme-light .hud-radar{border-color:#cfe0ff; filter:drop-shadow(0 0 4px rgba(0,0,0,.06))}
 
     @keyframes floatA{0%{transform:translate(-4%, -2%) scale(1)}50%{transform:translate(3%, 2%) scale(1.05)}100%{transform:translate(-4%, -2%) scale(1)}}
     @keyframes floatB{0%{transform:translate(3%, -3%) scale(1)}50%{transform:translate(-2%, 2%) scale(1.06)}100%{transform:translate(3%, -3%) scale(1)}}
     @keyframes floatC{0%{transform:translate(-2%, 3%) scale(1)}50%{transform:translate(2%, -2%) scale(1.04)}100%{transform:translate(-2%, 3%) scale(1)}}
 
-    /* Added: generic spin/orbit animations (fixes radar + logo) */
+    /* Added: generic spin/orbit animations */
     @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     @keyframes orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
     /* -------- Styles spécifiques "Boîte de réception" -------- */
-    /* Grille sans la colonne "Dossiers" (désormais dans la sidebar) */
     .inbox-grid{display:grid;grid-template-columns:420px minmax(540px, 1fr);gap:12px}
     .emailRow{padding:10px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column}
     .emailRow:hover{background:linear-gradient(180deg, rgba(25,62,128,.28), rgba(16,40,92,.28))}
+    :root.theme-light .emailRow:hover{background:linear-gradient(180deg, rgba(20,120,255,.08), rgba(20,120,255,.06))}
     .emailRow.unread .subject{font-weight:700}
     .emailRow .meta{color:var(--muted);display:flex;align-items:center;gap:8px}
     .dot{width:8px;height:8px;border-radius:50%;background:#69e7ff;box-shadow:0 0 10px #69e7ff}
 
     /* Folders tiles reused inside subnav */
-    .folder{padding:10px;border-radius:10px;cursor:pointer;color:var(--text);border:1px solid transparent;display:flex;align-items:center;justify-content:space-between}
+    .folder{padding:10px;border-radius:10px;cursor:pointer;color:var(--fg);border:1px solid transparent;display:flex;align-items:center;justify-content:space-between}
     .folder:hover{background:linear-gradient(180deg, rgba(17,40,86,.35), rgba(13,28,62,.3));border-color:rgba(100,200,255,.15)}
     .folder.active{background:linear-gradient(180deg, rgba(25,120,170,.25), rgba(16,60,130,.25));border-color:rgba(120,220,255,.35);box-shadow:var(--glow)}
     .folder .count{padding:2px 7px;border:1px solid rgba(120,220,255,.35);border-radius:999px;font-size:12px;background:rgba(20,230,255,.12);color:#dffbff}
+    :root.theme-light .folder:hover{background:linear-gradient(180deg, rgba(16,110,220,.08), rgba(16,110,220,.06)); border-color:#cfe0ff}
+    :root.theme-light .folder.active{background:linear-gradient(180deg, #eaf2ff, #e6f0ff); border-color:#c5dbff; box-shadow:0 0 0 1px #cfe0ff}
+    :root.theme-light .folder .count{background:#f0f6ff; color:#19406d; border-color:#cfe0ff}
 
     .badgeUrg{padding:2px 8px;border-radius:999px;font-size:12px;margin-left:6px;border:1px solid transparent;white-space:nowrap}
     .urg-urgent{background:rgba(255,77,109,.18);border-color:var(--danger);color:#ffd7de}
     .urg-medium{background:rgba(255,176,32,.18);border-color:var(--warn);color:#ffe7c4}
     .urg-low{background:rgba(52,199,89,.18);border-color:var(--success);color:#d9ffd9}
+    :root.theme-light .urg-urgent{background:#ffeaf0; color:#8c0f2c; border-color:#ffc2d1}
+    :root.theme-light .urg-medium{background:#fff3dd; color:#7a4b00; border-color:#ffdca4}
+    :root.theme-light .urg-low{background:#eaf9ee; color:#0f5a2a; border-color:#bfeccb}
 
     /* Digest résumé */
     .summaryBox{background:linear-gradient(180deg, rgba(18,32,70,.7), rgba(12,26,58,.7));border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px}
@@ -177,13 +228,14 @@
     .summaryStats{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#cfefff}
     .summaryActions{display:flex;gap:8px;margin-left:auto}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+    :root.theme-light .summaryBox{background:#ffffff}
   </style>
 
 <!--[if gte mso 9]><xml>
 <mso:CustomDocumentProperties>
-<mso:_dlc_DocId msdt:dt="string">NSX2YFTTSVUD-1009100899-466592</mso:_dlc_DocId>
-<mso:_dlc_DocIdItemGuid msdt:dt="string">1658a3f4-8ddc-4e51-b15c-34fed20c949e</mso:_dlc_DocIdItemGuid>
-<mso:_dlc_DocIdUrl msdt:dt="string">https://digitalizers.sharepoint.com/sites/MESgestion/_layouts/15/DocIdRedir.aspx?ID=NSX2YFTTSVUD-1009100899-466592, NSX2YFTTSVUD-1009100899-466592</mso:_dlc_DocIdUrl>
+<mso:_dlc_DocId msdt:dt="string">NSX2YFTTSVUD-1009100899-464587</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">1e0dd259-dc59-49e7-a6fa-ecf88903fe44</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://digitalizers.sharepoint.com/sites/MESgestion/_layouts/15/DocIdRedir.aspx?ID=NSX2YFTTSVUD-1009100899-464587, NSX2YFTTSVUD-1009100899-464587</mso:_dlc_DocIdUrl>
 </mso:CustomDocumentProperties>
 </xml><![endif]-->
 </head>
@@ -215,6 +267,7 @@
         <div class="env e3" title="email détecté"></div>
         <div class="env e4" title="email détecté"></div>
       </div>
+      <button class="btn" id="btnTheme" title="Basculer le thème">Thème: Dark</button>
       <button class="btn" id="btnToggleOutlook" title="Activer/Désactiver l'ingestion Outlook">Basculer Outlook</button>
       <button class="btn" id="btnOutlookSync" title="Forcer une synchronisation Outlook">Sync Outlook</button>
       <button class="btn" id="btnGraph">Connecter Graph</button>
@@ -341,7 +394,7 @@
       function DigestPanel(props){
         const state = props.state || { emails:[] };
         const selectedEmails = props.selectedEmails || [];
-        const [done, setDone] = useState({});
+        const [done, setDone] = React.useState({});
         function toggle(id){ setDone(function(prev){ var n=Object.assign({}, prev); n[id]=!prev[id]; return n; }); }
 
         function buildSelectionSummary(){
@@ -777,6 +830,7 @@
         const _o = useState(false); const outlookEnabled = _o[0]; const setOutlookEnabled = _o[1];
         const _g = useState({ connected:false, account:null }); const graph = _g[0]; const setGraph = _g[1];
         const _glass = useState(false); const glass = _glass[0]; const setGlass = _glass[1];
+        const _themeState = useState('dark'); const theme = _themeState[0]; const setTheme = _themeState[1];
 
         const _llm = useState({ baseUrl:'http://192.168.78.56:1234/v1', model:'gpt-oss' }); const llm = _llm[0]; const setLlm = _llm[1];
 
@@ -794,6 +848,14 @@
 
         // Boîte de réception (état local)
         const _em = useState(DEMO_EMAILS); const emails = _em[0]; const setEmails = _em[1];
+
+        // Apply theme helper
+        function applyTheme(next){
+          const root = document.documentElement; const isLight = next==='light';
+          root.classList.toggle('theme-light', isLight);
+          const btn = document.getElementById('btnTheme'); if(btn){ btn.textContent = 'Thème: '+(isLight? 'Light':'Dark'); }
+          try{ localStorage.setItem('iw_theme', next); }catch(_){ }
+        }
 
         // Mount/Update sidebar nav with subpanel under Inbox
         useEffect(function(){
@@ -813,9 +875,10 @@
           }
         }, [tab, inboxOpen, folder, emails]);
 
-        // Load settings from backend
+        // Load settings from backend + theme init
         useEffect(function(){ (async function(){
           const s = await ipcInvoke('settings:get');
+          let initTheme = null;
           if(s){
             setModel((s.llm && (s.llm.model_alias || s.llm.model)) ? (s.llm.model_alias || s.llm.model) : '—');
             setStatus(s.status && s.status.online ? 'en ligne' : 'hors ligne');
@@ -827,19 +890,24 @@
             if(s.ui && typeof s.ui.glass==='boolean'){ setGlass(s.ui.glass); try{ document.body.classList.toggle('glass-on', !!s.ui.glass); }catch(_){} }
             if(s.graph){ setGraph({ connected: !!s.graph.connected, account: s.graph.account || null }); }
             if(s.llm){ setLlm({ baseUrl: s.llm.base_url || s.llm.baseUrl || 'http://192.168.78.56:1234/v1', model: s.llm.model_alias || s.llm.model || 'gpt-oss' }); }
+            if(s.ui && s.ui.theme){ initTheme = s.ui.theme; }
           }
+          if(!initTheme){ try{ initTheme = localStorage.getItem('iw_theme') || 'dark'; }catch(_){ initTheme='dark'; } }
+          setTheme(initTheme); applyTheme(initTheme);
+
           const k = await ipcInvoke('knowledge:list'); if(Array.isArray(k)) setKnowledge(k);
           const a = await ipcInvoke('analytics:get'); if(a) setAnalytics(a);
           const gs = await ipcInvoke('graph:status'); if(gs){ setGraph({ connected: !!gs.connected, account: gs.account || null }); }
         })(); }, []);
 
-        // Header pills + buttons
+        // Header pills + buttons (+ theme button)
         useEffect(function(){
           var mp = document.getElementById('modelPill'); if(mp) mp.textContent = 'Modèle: '+model;
           var sp = document.getElementById('statusPill'); if(sp) sp.textContent = 'Statut: '+status;
           var op = document.getElementById('outlookPill'); if(op) op.textContent = 'Outlook: '+(outlookEnabled? 'activé':'désactivé');
           var gp = document.getElementById('graphPill'); if(gp) gp.textContent = 'Graph: '+(graph.connected? 'connecté':'déconnecté');
           var glassBtn = document.getElementById('btnGlass'); if(glassBtn) glassBtn.textContent = 'Glass: '+(glass? 'on':'off');
+          var themeBtn = document.getElementById('btnTheme'); if(themeBtn) themeBtn.textContent = 'Thème: '+(theme==='light'?'Light':'Dark');
 
           var syncBtn = document.getElementById('btnSync');
           if(syncBtn){ syncBtn.onclick = async function(){
@@ -869,10 +937,16 @@
             await ipcInvoke('settings:set', { partial:{ ui:{ glass: next } } });
             btnGlass.textContent = 'Glass: '+(next? 'on':'off');
           }; }
-        }, [model, status, outlookEnabled, analytics, graph, glass]);
+          var btnTheme = document.getElementById('btnTheme');
+          if(btnTheme){ btnTheme.onclick = async function(){
+            const next = (theme==='dark') ? 'light' : 'dark';
+            setTheme(next); applyTheme(next);
+            await ipcInvoke('settings:set', { partial:{ ui:{ theme: next } } });
+          }; }
+        }, [model, status, outlookEnabled, analytics, graph, glass, theme]);
 
         async function saveAll(){
-          const ok = await ipcInvoke('settings:set', { partial:{ masterPrompt:masterPrompt, tags:tags, rules:rules, conduct:conduct, llm:{ base_url: llm.baseUrl, model: llm.model, model_alias: llm.model }, ui:{ glass: glass } } });
+          const ok = await ipcInvoke('settings:set', { partial:{ masterPrompt:masterPrompt, tags:tags, rules:rules, conduct:conduct, llm:{ base_url: llm.baseUrl, model: llm.model, model_alias: llm.model }, ui:{ glass: glass, theme: theme } } });
           if(ok===false) flash("Échec de l'enregistrement"); else flash('Paramètres enregistrés');
         }
 
