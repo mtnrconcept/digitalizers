@@ -210,6 +210,8 @@
     .folder:hover{background:linear-gradient(180deg, rgba(17,40,86,.35), rgba(13,28,62,.3));border-color:rgba(100,200,255,.15)}
     .folder.active{background:linear-gradient(180deg, rgba(25,120,170,.25), rgba(16,60,130,.25));border-color:rgba(120,220,255,.35);box-shadow:var(--glow)}
     .folder .count{padding:2px 7px;border:1px solid rgba(120,220,255,.35);border-radius:999px;font-size:12px;background:rgba(20,230,255,.12);color:#dffbff}
+    .folder-label{display:flex;align-items:center;gap:6px}
+    .folder .unread-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger)}
     :root.theme-light .folder:hover{background:linear-gradient(180deg, rgba(16,110,220,.08), rgba(16,110,220,.06)); border-color:#cfe0ff}
     :root.theme-light .folder.active{background:linear-gradient(180deg, #eaf2ff, #e6f0ff); border-color:#c5dbff; box-shadow:0 0 0 1px #cfe0ff}
     :root.theme-light .folder .count{background:#f0f6ff; color:#19406d; border-color:#cfe0ff}
@@ -233,9 +235,9 @@
 
 <!--[if gte mso 9]><xml>
 <mso:CustomDocumentProperties>
-<mso:_dlc_DocId msdt:dt="string">NSX2YFTTSVUD-1009100899-464587</mso:_dlc_DocId>
-<mso:_dlc_DocIdItemGuid msdt:dt="string">1e0dd259-dc59-49e7-a6fa-ecf88903fe44</mso:_dlc_DocIdItemGuid>
-<mso:_dlc_DocIdUrl msdt:dt="string">https://digitalizers.sharepoint.com/sites/MESgestion/_layouts/15/DocIdRedir.aspx?ID=NSX2YFTTSVUD-1009100899-464587, NSX2YFTTSVUD-1009100899-464587</mso:_dlc_DocIdUrl>
+<mso:_dlc_DocId msdt:dt="string">NSX2YFTTSVUD-1009100899-466706</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">4fa79543-bdd4-405a-a1b2-73d64ec819ea</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://digitalizers.sharepoint.com/sites/MESgestion/_layouts/15/DocIdRedir.aspx?ID=NSX2YFTTSVUD-1009100899-466706, NSX2YFTTSVUD-1009100899-466706</mso:_dlc_DocIdUrl>
 </mso:CustomDocumentProperties>
 </xml><![endif]-->
 </head>
@@ -390,6 +392,55 @@
         if(body.length>160) snippet += '…';
         return `• ${em.subject} — ${snippet}`;
       }
+  
+      async function generateDrafts(email){
+        const subject = 'Re: '+(email.subject||'');
+        const recipient = (email.from||'').split('@')[0] || 'à vous';
+        const ref = email.body ? ` concernant "${email.body}"` : '';
+        const base = `Bonjour ${recipient},\n\nMerci pour votre message${ref}.\n`;
+        return {
+          formal: {
+            subject,
+            body: base + "Nous traiterons votre demande dans les plus brefs délais.\n\nCordialement,\n—"
+          },
+          long: {
+            subject,
+            body: base + "Voici une réponse détaillée à votre demande.\n\nCordialement,\n—"
+          },
+          short: {
+            subject,
+            body: `Bonjour,\n\nMerci pour votre message.\n\nCordialement,\n—`
+          },
+          human: {
+            subject,
+            body: base + "Merci encore et à bientôt !\n\nBien à vous,\n—"
+          },
+          humorous: {
+            subject,
+            body: base + "Je m'en occupe avant que mon café ne refroidisse☕️\n\nÀ bientôt,\n—"
+          }
+        };
+      }
+
+      function DraftSuggestions(props){
+        const drafts = props.drafts || {};
+        const items = [
+          { key:'formal', label:'Formelle' },
+          { key:'long', label:'Longue' },
+          { key:'short', label:'Courte' },
+          { key:'human', label:'Humaine' },
+          { key:'humorous', label:'Humoristique' }
+        ];
+        return e('div', { className:'grid cols-2', style:{ marginTop:'12px' } },
+          items.map(function(it){
+            const d = drafts[it.key];
+            return e('div', { key:it.key, className:'card' },
+              e('div', { className:'hd' }, it.label),
+              e('div', { className:'bd', style:{ whiteSpace:'pre-wrap' } }, d ? d.body : 'Préparation…')
+            );
+          })
+        );
+      }
 
       function DigestPanel(props){
         const state = props.state || { emails:[] };
@@ -475,7 +526,15 @@
         const [showDigest, setShowDigest] = useState(true);
         const [selMap, setSelMap] = useState({}); // sélection multiple pour digest
 
-        const list = (state.emails||[]).filter(function(em){ return em.folder===folder; });
+               useEffect(function(){
+          if(selected){
+            const updated = (state.emails||[]).find(function(e){ return e.id===selected.id; });
+            if(updated && updated!==selected) setSelected(updated);
+          }
+        }, [state.emails]);
+
+
+     const list = (state.emails||[]).filter(function(em){ return em.folder===folder; });
         const selectedEmails = (state.emails||[]).filter(function(em){ return !!selMap[em.id]; });
 
         function toggleSelect(id, ev){ if(ev) ev.stopPropagation(); setSelMap(function(prev){ var n=Object.assign({}, prev); n[id]=!prev[id]; return n; }); }
@@ -484,6 +543,12 @@
           setSelected(em);
           // marquer comme lu à l'ouverture
           const next = (state.emails||[]).map(function(x){ return x.id===em.id? Object.assign({}, x, { read:true }): x; });
+          setEmails(next);
+        }
+
+        function markSelectedUnread(){
+          if(!selectedEmails.length) return;
+          const next = (state.emails||[]).map(function(x){ return selMap[x.id] ? Object.assign({}, x, { read:false }) : x; });
           setEmails(next);
         }
 
@@ -496,41 +561,47 @@
             },
             e('div', { className:'inbox-grid' },
               // Col 1: Emails (les dossiers sont dans la sidebar)
-              e('div', { className:'card' },
-                e('div', { className:'hd' }, 'Emails'),
-                e('div', { className:'bd' },
-                  list.map(function(em){
-                    return e('div', { key:em.id, className:'emailRow'+(!em.read?' unread':''), onClick:function(){ openEmail(em); } },
-                      e('div', { className:'meta' },
-                        e('input', { type:'checkbox', checked:!!selMap[em.id], onChange:function(ev){ toggleSelect(em.id, ev); } }),
-                        !em.read ? e('span', { className:'dot', title:'non lu' }) : null,
-                        e('strong', null, em.from),
-                        e('span', null, '•'),
-                        e('span', null, em.date),
-                        e('span', { className:'badgeUrg '+(em.urgency==='urgent'?'urg-urgent':em.urgency==='medium'?'urg-medium':'urg-low') }, em.urgency)
-                      ),
-                      e('div', { className:'subject' }, em.subject)
-                    );
-                  })
+               e('div', null,
+                e('div', { className:'row', style:{ marginBottom:8 } },
+                  e('button', { className:'btn', onClick:markSelectedUnread, disabled:selectedEmails.length===0 }, 'Marquer comme non lu')
+                ),
+                e('div', { className:'card' },
+                  e('div', { className:'hd' }, 'Emails'),
+                  e('div', { className:'bd' },
+                    list.map(function(em){
+                      return e('div', { key:em.id, className:'emailRow'+(!em.read?' unread':''), onClick:function(){ openEmail(em); } },
+                        e('div', { className:'meta' },
+                          e('input', { type:'checkbox', checked:!!selMap[em.id], onChange:function(ev){ toggleSelect(em.id, ev); } }),
+                          !em.read ? e('span', { className:'dot', title:'non lu' }) : null,
+                          e('strong', null, em.from),
+                          e('span', null, '•'),
+                          e('span', null, em.date),
+                          e('span', { className:'badgeUrg '+(em.urgency==='urgent'?'urg-urgent':em.urgency==='medium'?'urg-medium':'urg-low') }, em.urgency)
+                        ),
+                        e('div', { className:'subject' }, em.subject)
+                      );
+                    })
+                  )
                 )
               ),
               // Col 2: Aperçu
               e('div', { className:'card' },
                 e('div', { className:'hd' }, 'Aperçu'),
                 e('div', { className:'bd' },
-                  selected ?
-                    e('div', null,
-                      e('div', { style:{ fontWeight:'bold', marginBottom:'4px' } }, selected.subject),
-                      e('div', { style:{ color:'var(--muted)', marginBottom:'8px' } }, 'De ', selected.from, ' • ', selected.date),
-                      e('div', null, selected.body),
-                      e('div', { style:{ marginTop:'8px', display:'flex', gap:'8px', alignItems:'center' } },
-                        e('span', { className: 'badgeUrg ' + (selected.urgency==='urgent'?'urg-urgent':selected.urgency==='medium'?'urg-medium':'urg-low') }, selected.urgency)
+                              selected ?
+                      e('div', null,
+                        e('div', { style:{ fontWeight:'bold', marginBottom:'4px' } }, selected.subject),
+                        e('div', { style:{ color:'var(--muted)', marginBottom:'8px' } }, 'De ', selected.from, ' • ', selected.date),
+                        e('div', null, selected.body),
+                        e('div', { style:{ marginTop:'8px', display:'flex', gap:'8px', alignItems:'center' } },
+                          e('span', { className: 'badgeUrg ' + (selected.urgency==='urgent'?'urg-urgent':selected.urgency==='medium'?'urg-medium':'urg-low') }, selected.urgency)
+                        ),
+                        selected.drafts ? e(DraftSuggestions, { drafts:selected.drafts }) : e('div', { style:{ marginTop:'12px', color:'var(--muted)' } }, 'Préparation des brouillons…')
                       )
-                    )
-                  : e('div', { style:{ color:'var(--muted)' } }, 'Sélectionnez un email.')
+                    : e('div', { style:{ color:'var(--muted)' } }, 'Sélectionnez un email.')
+                  )
                 )
-              )
-            ),
+              ),
             showDigest ? e(DigestPanel, { state:{ emails: state.emails }, selectedEmails: selectedEmails }) : null
           )
         );
@@ -560,9 +631,10 @@
               e('div', { className:'subnav-hd' }, 'Dossiers'),
               folders.map(function(f){
                 var cls = 'folder'+(folderSelected===f.id?' active':'');
+                var unread = unreadCount(f.id);
                 return e('div', { key:f.id, className:cls, onClick:function(ev){ ev.stopPropagation(); onSelect('inbox'); onSelectFolder(f.id); } },
-                  e('span', null, f.label),
-                  e('span', { className:'count' }, unreadCount(f.id))
+                  e('span', { className:'folder-label' }, f.label, unread>0 ? e('span', { className:'unread-dot' }) : null),
+                  e('span', { className:'count' }, unread)
                 );
               })
             ) : null
@@ -610,12 +682,13 @@
         );
       }
 
-      // Master Prompt + LLM config
+      // Master Prompt + LLM config + Conduct
       function MasterPrompt(props){
         const masterPrompt = props.masterPrompt; const setMasterPrompt = props.setMasterPrompt || function(){};
         const onTestPrompt = props.onTestPrompt || function(){};
         const llm = props.llm || { baseUrl:'', model:''};
         const setLlm = props.setLlm || function(){};
+        const conduct = props.conduct || {}; const setConduct = props.setConduct || function(){};
         const _tmp = useState('Bonjour, pouvez-vous m\'envoyer le compte rendu de la réunion ?');
         const sample = _tmp[0]; const setSample = _tmp[1];
         const _tmp2 = useState(false); const testing = _tmp2[0]; const setTesting = _tmp2[1];
@@ -627,30 +700,32 @@
           finally{ setTesting(false); }
         }
 
-        return e(Section, { title:'Master prompt', subtitle:'Rôle système injecté à chaque génération de brouillon.' },
-          e('div', { className:'grid cols-2' },
-            e(Card, { title:'LLM local' },
-              e('div', { className:'row' },
-                e(Input, { label:'Base URL', placeholder:'http://192.168.78.56:1234/v1', value: llm.baseUrl||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { baseUrl: ev.target.value })); } }),
-                e(Input, { label:'Modèle', placeholder:'gpt-oss', value: llm.model||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { model: ev.target.value })); } })
+        return e(Fragment, null,
+          e(Section, { title:'Master prompt', subtitle:'Rôle système injecté à chaque génération de brouillon.' },
+            e('div', { className:'grid cols-2' },
+              e(Card, { title:'LLM local' },
+                e('div', { className:'row' },
+                  e(Input, { label:'Base URL', placeholder:'http://192.168.78.56:1234/v1', value: llm.baseUrl||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { baseUrl: ev.target.value })); } }),
+                  e(Input, { label:'Modèle', placeholder:'gpt-oss', value: llm.model||'', onChange:function(ev){ setLlm(Object.assign({}, llm, { model: ev.target.value })); } })
+                ),
+                e(TextArea, { rows:14, value:masterPrompt, onChange:function(evv){ setMasterPrompt(evv.target.value); }, placeholder:"Ex: Tu es un assistant email pour un professionnel. Règles: concision, clarté, pas d'hallucinations…" })
               ),
-              e(TextArea, { rows:14, value:masterPrompt, onChange:function(evv){ setMasterPrompt(evv.target.value); }, placeholder:"Ex: Tu es un assistant email pour un professionnel. Règles: concision, clarté, pas d'hallucinations…" })
-            ),
-            e(Card, { title:'Tester', right: e('button', { className:'btn', onClick:test }, testing ? 'Génération…' : 'Générer un brouillon') },
-              e(TextArea, { label:"Email d'exemple", rows:8, value:sample, onChange:function(evv){ setSample(evv.target.value); } }),
-              e('div', { className:'field' },
-                e('label', null, 'Résultat'),
-                e('div', { className:'card', style:{ background:'var(--surface-3)' } },
-                  e('div', { className:'bd' },
-                    e('div', { className:'muted' }, 'Sujet'),
-                    e('div', { style:{ marginBottom:8 } }, result && result.subject_suggestion ? result.subject_suggestion : '—'),
-                    e('div', { className:'muted' }, 'Corps'),
-                    e('div', { style:{ whiteSpace:'pre-wrap' } }, result && result.body ? result.body : '—')
-                  )
+              e(Card, { title:'Tester', right: e('button', { className:'btn', onClick:test }, testing ? 'Génération…' : 'Générer un brouillon') },
+                e(TextArea, { label:"Email d'exemple", rows:8, value:sample, onChange:function(evv){ setSample(evv.target.value); } }),
+                e('div', { className:'field' },
+                  e('label', null, 'Résultat'),
+                  e('div', { className:'card', style:{ background:'var(--surface-3)' } },
+                    e('div', { className:'bd' },
+                      e('div', { className:'muted' }, 'Sujet'),
+                      e('div', { style:{ marginBottom:8 } }, result && result.subject_suggestion ? result.subject_suggestion : '—'),
+                      e('div', { className:'muted' }, 'Corps'),
+                      e('div', { style:{ whiteSpace:'pre-wrap' } }, result && result.body ? result.body : '—')
+                    )                  )
                 )
               )
             )
-          )
+          ),
+          e(Conduct, { conduct:conduct, setConduct:setConduct })
         );
       }
 
@@ -815,9 +890,8 @@
         const tabs = [
           { id:'inbox', label:'Boîte de réception', icon:'📥' },
           { id:'knowledge', label:'Knowledge', icon:'📚' },
-          { id:'master', label:'Master prompt', icon:'🧠' },
+          { id:'master', label:'Prompt & conduite', icon:'🧠' },
           { id:'tags', label:'Attribution de tags', icon:'🏷️' },
-          { id:'conduct', label:'Ligne de conduite', icon:'🧭' },
           { id:'analytics', label:'Analytics', icon:'📊' },
         ];
 
@@ -848,6 +922,25 @@
 
         // Boîte de réception (état local)
         const _em = useState(DEMO_EMAILS); const emails = _em[0]; const setEmails = _em[1];
+
+          useEffect(function(){
+          let cancelled = false;
+          (async function(){
+            const updated = [];
+            let changed = false;
+            for(const em of emails){
+              if(!em.drafts){
+                const drafts = await generateDrafts(em);
+                updated.push(Object.assign({}, em, { drafts:drafts }));
+                changed = true;
+              } else {
+                updated.push(em);
+              }
+            }
+            if(!cancelled && changed){ setEmails(updated); }
+          })();
+          return function(){ cancelled = true; };
+        }, [emails]);
 
         // Apply theme helper
         function applyTheme(next){
@@ -982,9 +1075,8 @@
           // Navigation : rendu dans la sidebar (#nav) via SidebarMenu
           e('div', { className:'view '+(tab==='inbox'?'active':'') }, e(InboxView, { state:{ emails: emails }, setEmails:setEmails, folder:folder, setFolder:setFolder })),
           e('div', { className:'view '+(tab==='knowledge'?'active':'') }, e(Knowledge, { knowledge:knowledge, onAddNote:onAddNote, onAddFile:onAddFile, onRemove:onRemove, onReindex:onReindex })),
-          e('div', { className:'view '+(tab==='master'?'active':'') }, e(MasterPrompt, { masterPrompt:masterPrompt, setMasterPrompt:setMasterPrompt, onTestPrompt:onTestPrompt, llm: llm, setLlm: setLlm })),
+          e('div', { className:'view '+(tab==='master'?'active':'') }, e(MasterPrompt, { masterPrompt:masterPrompt, setMasterPrompt:setMasterPrompt, onTestPrompt:onTestPrompt, llm: llm, setLlm: setLlm, conduct:conduct, setConduct:setConduct })),
           e('div', { className:'view '+(tab==='tags'?'active':'') }, e(TagRules, { tags:tags, setTags:setTags, rules:rules, setRules:setRules })),
-          e('div', { className:'view '+(tab==='conduct'?'active':'') }, e(Conduct, { conduct:conduct, setConduct:setConduct })),
           e('div', { className:'view '+(tab==='analytics'?'active':'') }, e(AnalyticsView, { analytics:analytics }))
         );
       }
