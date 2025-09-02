@@ -105,8 +105,8 @@
     .sidebar .foot{margin-top:auto;padding:12px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;letter-spacing:.12em}
 
     /* Topbar */
-    .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg, rgba(14,28,60,.7), rgba(10,20,44,.6));
-      border-bottom:1px solid var(--border);position:relative}
+    .toolbar{position:fixed;top:0;left:280px;right:0;z-index:100;display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg, rgba(14,28,60,.7), rgba(10,20,44,.6));border-bottom:1px solid var(--border);transform:translateY(-100%);transition:transform .3s}
+    .toolbar.visible{transform:translateY(0)}
     .toolbar::after{content:"";position:absolute;inset:-1px 0 auto 0;height:1px;background:linear-gradient(90deg, transparent, #1fdcff 20%, transparent 60%, #1fdcff 80%, transparent);opacity:.6}
     :root.theme-light .toolbar{background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,251,255,.9))}
     :root.theme-light .toolbar::after{background:linear-gradient(90deg, transparent, #c6ddff 20%, transparent 60%, #c6ddff 80%, transparent); opacity:.7}
@@ -1064,6 +1064,18 @@
 
       // Run smoke tests after first paint
       window.requestAnimationFrame(function(){ try{ runSmokeTests(); }catch(e){ console.warn('Smoke tests failed to start', e); } });
+    })();
+  </script>
+  <script>
+    (function(){
+      var toolbar = document.querySelector('.toolbar');
+      if(!toolbar) return;
+      function show(){ toolbar.classList.add('visible'); }
+      function hide(){ toolbar.classList.remove('visible'); }
+      document.addEventListener('mousemove', function(e){
+        if(e.clientY <= 5) show();
+      });
+      toolbar.addEventListener('mouseleave', hide);
     })();
   </script>
 </body>
