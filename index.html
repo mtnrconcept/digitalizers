@@ -246,6 +246,7 @@
       background-image: url('assets/candy.svg');
       background-size:100px;
       background-repeat:repeat;
+      padding-top:32px;
     }
     body::before, body::after{display:none;}
     .sidebar, .toolbar{
@@ -286,11 +287,17 @@
       padding:4px;
       background:rgba(255,182,193,0.6);
       border-bottom:1px solid #ff99c8;
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:101;
     }
     .char-strip img{
       width:24px;
       height:24px;
     }
+    .toolbar{top:32px;}
   </style>
 
 <!--[if gte mso 9]><xml>
