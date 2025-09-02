@@ -231,6 +231,66 @@
     .summaryActions{display:flex;gap:8px;margin-left:auto}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
     :root.theme-light .summaryBox{background:#ffffff}
+
+    /* Unicorn candy theme overrides */
+    :root{
+      --fg:#4e0068;
+      --muted:#b35db3;
+      --primary:#ff66c4;
+      --accent:#ff99cc;
+      --border:#ffb3d9;
+    }
+    body{
+      background: linear-gradient(135deg, #ffccf9 0%, #ffe6f9 100%);
+      color:#4e0068;
+      background-image: url('assets/candy.svg');
+      background-size:100px;
+      background-repeat:repeat;
+    }
+    body::before, body::after{display:none;}
+    .sidebar, .toolbar{
+      background: rgba(255,192,203,0.85);
+    }
+    .brand .logo{
+      background:none;
+      background-image:url('assets/unicorn.svg');
+      background-size:cover;
+      box-shadow:none;
+    }
+    .brand h1{
+      color:#ff66c4;
+    }
+    .pill, .btn{
+      background:rgba(255,182,193,0.85);
+      border:1px solid #ff69b4;
+      color:#5a005a;
+    }
+    .nav button{
+      background:rgba(255,182,193,0.7);
+      outline:1px solid #ff99c8;
+      box-shadow:none;
+      color:#4e0068;
+    }
+    .nav button:hover{
+      background:rgba(255,182,193,0.85);
+    }
+    .nav button.active{
+      background:rgba(255,210,230,0.9);
+      outline:1px solid #ff69b4;
+    }
+    .char-strip{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:6px;
+      padding:4px;
+      background:rgba(255,182,193,0.6);
+      border-bottom:1px solid #ff99c8;
+    }
+    .char-strip img{
+      width:24px;
+      height:24px;
+    }
   </style>
 
 <!--[if gte mso 9]><xml>
@@ -242,6 +302,12 @@
 </xml><![endif]-->
 </head>
 <body>
+  <div class="char-strip">
+    <img src="assets/unicorn.svg" alt="unicorn"/>
+    <img src="assets/rainbow.svg" alt="rainbow"/>
+    <img src="assets/leprechaun.svg" alt="leprechaun"/>
+    <img src="assets/candy.svg" alt="candy"/>
+  </div>
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
