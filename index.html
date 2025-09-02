@@ -393,52 +393,15 @@
         return `• ${em.subject} — ${snippet}`;
       }
   
-      async function generateDrafts(email){
-        const subject = 'Re: '+(email.subject||'');
-        const recipient = (email.from||'').split('@')[0] || 'à vous';
-        const ref = email.body ? ` concernant "${email.body}"` : '';
-        const base = `Bonjour ${recipient},\n\nMerci pour votre message${ref}.\n`;
-        return {
-          formal: {
-            subject,
-            body: base + "Nous traiterons votre demande dans les plus brefs délais.\n\nCordialement,\n—"
-          },
-          long: {
-            subject,
-            body: base + "Voici une réponse détaillée à votre demande.\n\nCordialement,\n—"
-          },
-          short: {
-            subject,
-            body: `Bonjour,\n\nMerci pour votre message.\n\nCordialement,\n—`
-          },
-          human: {
-            subject,
-            body: base + "Merci encore et à bientôt !\n\nBien à vous,\n—"
-          },
-          humorous: {
-            subject,
-            body: base + "Je m'en occupe avant que mon café ne refroidisse☕️\n\nÀ bientôt,\n—"
-          }
-        };
-      }
+
 
       function DraftSuggestions(props){
-        const drafts = props.drafts || {};
-        const items = [
-          { key:'formal', label:'Formelle' },
-          { key:'long', label:'Longue' },
-          { key:'short', label:'Courte' },
-          { key:'human', label:'Humaine' },
-          { key:'humorous', label:'Humoristique' }
-        ];
-        return e('div', { className:'grid cols-2', style:{ marginTop:'12px' } },
-          items.map(function(it){
-            const d = drafts[it.key];
-            return e('div', { key:it.key, className:'card' },
-              e('div', { className:'hd' }, it.label),
-              e('div', { className:'bd', style:{ whiteSpace:'pre-wrap' } }, d ? d.body : 'Préparation…')
-            );
-          })
+        const d = props.drafts && props.drafts.llm;
+        return e('div', { className:'grid cols-1', style:{ marginTop:'12px' } },
+          e('div', { className:'card' },
+            e('div', { className:'hd' }, 'Suggestion IA'),
+            e('div', { className:'bd', style:{ whiteSpace:'pre-wrap' } }, d ? `Sujet: ${d.subject}\n\n${d.body}` : 'Préparation…')
+          )
         );
       }
 
@@ -930,9 +893,13 @@
             let changed = false;
             for(const em of emails){
               if(!em.drafts){
-                const drafts = await generateDrafts(em);
-                updated.push(Object.assign({}, em, { drafts:drafts }));
-                changed = true;
+                const res = await generateDrafts(em);
+                if(res){
+                  updated.push(Object.assign({}, em, { drafts:{ llm:{ subject: res.subject_suggestion, body: res.body } } }));
+                  changed = true;
+                } else {
+                  updated.push(em);
+                }
               } else {
                 updated.push(em);
               }
@@ -1063,6 +1030,15 @@
             try{ var m = text.match(/(?:Sujet|Subject)\s*:\s*(.+)/i); if(m){ subject = m[1].trim(); } }catch(_){ }
             return { subject_suggestion: subject, body: body };
           }catch(err){ console.warn('LLM fallback error', err); flash('LLM local injoignable'); return null; }
+        }
+
+        async function generateDrafts(email){
+          const sampleEmail = `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body||''}`;
+          const ctx = [];
+          if(conduct) ctx.push('Conduite: '+JSON.stringify(conduct));
+          if(tags && tags.length) ctx.push('Tags: '+tags.map(t=>t.id).join(', '));
+          const prompt = masterPrompt + (ctx.length ? '\n\n'+ctx.join('\n') : '');
+          return await callLocalLLM(sampleEmail, prompt);
         }
 
         async function onTestPrompt(sampleEmail, prompt){
